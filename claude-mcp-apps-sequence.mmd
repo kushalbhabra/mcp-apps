@@ -1,0 +1,103 @@
+sequenceDiagram
+    actor User
+    participant Claude as Claude<br/>(Conversation)
+    participant MCPClient as MCP Client<br/>(Claude-side)
+    participant MCPServer as MCP Server<br/>(Imagine)
+    participant Host as Host UI<br/>(Claude Chat)
+    participant Browser as Browser DOM
+
+    User->>Claude: "Create an interactive<br/>compound interest calculator"
+    
+    activate Claude
+    Claude->>Claude: Analyze request<br/>Generate HTML/CSS/JS<br/>~2,500 tokens
+    Claude->>MCPClient: Call visualize:show_widget<br/>with widget_code parameter<br/>(HTML string)
+    deactivate Claude
+
+    activate MCPClient
+    MCPClient->>MCPServer: Tool call: visualize:show_widget<br/>Payload: HTML/CSS/JS code<br/>(~2.5KB compressed)
+    deactivate MCPClient
+
+    activate MCPServer
+    MCPServer->>MCPServer: Parse tool call<br/>Cache widget_code<br/>Generate resource URI
+    MCPServer->>Host: Return resource URI<br/>+ widget_code
+    deactivate MCPServer
+
+    activate Host
+    Host->>Host: Inject CSS variables<br/>--text-primary, --surface-1, etc.
+    Host->>Browser: Parse HTML<br/>Apply CSS<br/>Attach event listeners
+    Host->>Browser: Render widget DOM
+    deactivate Host
+
+    Browser->>User: Display interactive widget<br/>3 sliders + chart + value cards
+
+    activate User
+    User->>Browser: Move principal slider<br/>from $1,000 to $5,000
+    deactivate User
+
+    activate Browser
+    Browser->>Browser: onchange event fires<br/>JavaScript runs client-side<br/>ZERO API calls
+    Browser->>Browser: Recalculate:<br/>balance = P × (1+r)^y<br/>compound = $38,060<br/>simple = $15,500
+    Browser->>Browser: Update DOM:<br/>- Output labels<br/>- Value cards<br/>- Chart data
+    Browser->>Browser: Re-render Chart.js
+    deactivate Browser
+
+    Browser->>User: Display updated results<br/>Real-time, instant
+
+    User->>Browser: Adjust rate slider<br/>from 7% to 10%
+    
+    activate Browser
+    Browser->>Browser: onchange fires<br/>Recalculate & re-render<br/>(0 tokens)
+    deactivate Browser
+
+    Browser->>User: Display updated chart
+
+    User->>Claude: "Add monthly<br/>compounding toggle"
+    
+    activate Claude
+    Claude->>Claude: Analyze request<br/>Regenerate HTML with:<br/>- Toggle buttons<br/>- Monthly formula logic<br/>~3,200 tokens
+    Claude->>MCPClient: Call visualize:show_widget<br/>with NEW widget_code
+    deactivate Claude
+
+    activate MCPClient
+    MCPClient->>MCPServer: Tool call with<br/>updated widget_code
+    deactivate MCPClient
+
+    activate MCPServer
+    MCPServer->>Host: Return updated widget
+    deactivate MCPServer
+
+    activate Host
+    Host->>Browser: Replace widget DOM<br/>New version cached
+    deactivate Host
+
+    Browser->>User: Display updated widget<br/>with toggle buttons
+
+    activate User
+    User->>Browser: Click "Monthly" button
+    deactivate User
+
+    activate Browser
+    Browser->>Browser: Button click handler<br/>Set isMonthly = true<br/>Recalculate with:<br/>balance = P × (1 + r/12)^(12×y)
+    Browser->>Browser: Update label to<br/>"Compound Interest (Monthly)"<br/>Re-render chart
+    deactivate Browser
+
+    Browser->>User: Show monthly results<br/>(0 tokens for interaction)
+
+    activate User
+    User->>Browser: Toggle to "Annually"
+    deactivate User
+
+    activate Browser
+    Browser->>Browser: Button click handler<br/>Recalculate with annual formula<br/>Update DOM (0 tokens)
+    deactivate Browser
+
+    Browser->>User: Show annual results
+
+    note over User,Browser
+        Token Cost Summary:
+        ✓ Initial widget: 2,500 tokens (one-time)
+        ✓ User interactions: 0 tokens (unlimited)
+        ✓ Update with new feature: 3,200 tokens
+        ✓ Toggle between modes: 0 tokens
+        Total: ~5,700 tokens vs 7,500-15,000 with API-per-interaction
+    end
