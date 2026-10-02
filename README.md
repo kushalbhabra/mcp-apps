@@ -19,6 +19,8 @@ MCP Apps couples:
 1. **Tools** (server-side functions Claude can call)
 2. **Resources** (client-side UI/HTML served to the host)
 
+### Workflow: User → Claude → MCP → Host → Browser
+
 ```
 User Query
     ↓
@@ -30,6 +32,15 @@ Host (Claude UI) renders widget
     ↓
 User interaction (sliders, buttons) → runs client-side JavaScript
 ```
+
+**See the detailed [sequence diagram](claude-mcp-apps-sequence.mmd) for the complete flow including:**
+- Claude analyzing request and generating widget code (~2,500 tokens)
+- MCP Client calling visualize:show_widget with HTML/CSS/JS payload
+- MCP Server caching widget and returning resource URI
+- Host injecting design system CSS variables
+- Browser DOM rendering and attaching event listeners
+- User interactions triggering client-side calculations (0 tokens)
+- Widget updates when adding new features (3,200 tokens)
 
 ### Why No API Calls for Interactions?
 
@@ -149,8 +160,10 @@ Available modules (via `https://sandbox.claudemcpcontent.com/imagine_mcp`):
 
 ## Key Files in This Repo
 
-- `examples/compound-interest-widget.html` — Complete working widget
-- `examples/compound-interest-monthly.html` — Monthly compounding variant
+- [claude-mcp-apps-architecture.mmd](claude-mcp-apps-architecture.mmd) — High-level flowchart of how Claude uses MCP Apps
+- [claude-mcp-apps-sequence.mmd](claude-mcp-apps-sequence.mmd) — Detailed sequence diagram showing user → Claude → MCP → Host workflow
+- [examples/compound-interest-widget.html](examples/compound-interest-widget.html) — Complete working widget (annual compounding)
+- [examples/compound-interest-monthly.html](examples/compound-interest-monthly.html) — Monthly compounding variant with toggle
 - `patterns/` — Reusable patterns and templates
 - `docs/` — Detailed architecture and performance documentation
 
