@@ -1,0 +1,47 @@
+graph TB
+    subgraph Host["🖥️ HOST (Claude Desktop)"]
+        Theme["Theme Context<br/>(Light/Dark)"]
+        CSSVars["CSS Variables:<br/>--text-primary<br/>--surface-1<br/>--primary<br/>--radius"]
+        FontCDN["@font-face Injection<br/>anthropic-serif<br/>anthropic-sans"]
+        IFrame["IFrame Sandbox<br/>(Isolated Context)"]
+    end
+
+    subgraph Sandbox["🔒 SANDBOX (Isolated Execution)"]
+        Widget["MCP App Widget<br/>(HTML/CSS/JS)"]
+        Styles["CSS Rules<br/>color: var(--text-primary)<br/>background: var(--surface-1)"]
+        JavaScript["JavaScript<br/>Event Listeners<br/>DOM Updates"]
+        Chart["Chart.js<br/>Data Viz"]
+    end
+
+    subgraph Claude["🤖 CLAUDE"]
+        Tool["Tool Call<br/>visualize:show_widget"]
+        Generation["Widget Code Gen<br/>~2,500 tokens"]
+    end
+
+    subgraph User["👤 USER"]
+        Interaction["Slider Move<br/>Button Click<br/>Toggle Change"]
+    end
+
+    Claude -->|"generates widget_code<br/>(complete HTML/CSS/JS)"| Tool
+    Tool -->|"Tool Parameter<br/>widget_code: <html>..."| Host
+    
+    Theme -->|"detects theme"| CSSVars
+    CSSVars -->|"injects into iframe"| Styles
+    FontCDN -->|"loads fonts"| Styles
+    
+    Host -->|"renders in sandbox<br/>enforces isolation"| IFrame
+    IFrame -->|"contains"| Sandbox
+    
+    Sandbox -->|"HTML structure"| Widget
+    Sandbox -->|"CSS variables applied"| Styles
+    Sandbox -->|"zero-token interactions"| JavaScript
+    JavaScript -->|"updates"| Chart
+    
+    User -->|"interacts"| Interaction
+    Interaction -->|"triggers JS<br/>(no server call)"| JavaScript
+    JavaScript -->|"recalculates<br/>re-renders"| Chart
+    
+    style Host fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Sandbox fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Claude fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style User fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
