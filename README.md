@@ -100,14 +100,22 @@ Every MCP App uses three core primitives:
 
 ### 2. Resource (Client-side, host-rendered)
 
+**What Claude generates and sends as `widget_code` parameter:**
+
 ```html
-<!-- What Claude generates and sends as widget_code parameter -->
 <html>
   <head>
     <style>
-      /* Inline CSS, uses host CSS variables */
-      body { color: var(--text-primary); background: var(--surface-1); }
-      input { accent-color: var(--primary); }
+      /* CRITICAL: Inline CSS ONLY, uses host CSS variables */
+      body { 
+        color: var(--text-primary);           /* ← NO hardcoded colors */
+        background: var(--surface-1);         /* ← Uses host variables */
+        font-family: var(--font-anthropic-sans);
+      }
+      input { 
+        accent-color: var(--primary);
+        border-radius: var(--radius);
+      }
     </style>
   </head>
   <body>
@@ -124,11 +132,13 @@ Every MCP App uses three core primitives:
 </html>
 ```
 
-- **Host renders this widget** in an iframe sandbox
-- No external stylesheets or scripts (all inline)
-- Host injects CSS variables for theming
+**Key requirements:**
+- **No external stylesheets** (all inline)
+- **No external scripts** (all inline)
+- **CSS variables only** (no hardcoded colors, fonts, sizes)
+- **Vanilla JavaScript** (no frameworks)
 
-### 3. Parameters
+### 3. Parameters: String → Cache → URI
 
 When Claude calls the tool:
 
@@ -136,17 +146,246 @@ When Claude calls the tool:
 {
   "tool": "visualize:show_widget",
   "input": {
-    "widget_code": "<html>...</html>"  // ← Single large parameter
+    "widget_code": "<html>...</html>"  // ← Entire widget as string parameter
   }
 }
 ```
 
-The widget_code parameter contains:
-- **HTML structure** (headings, sliders, display areas)
-- **CSS styling** (inline, using host CSS variables)
-- **JavaScript logic** (event handlers, calculations)
+**The flow:**
+1. Claude generates complete `<html>...</html>` as string (~2-10KB)
+2. Claude calls tool with `widget_code` parameter
+3. MCP Server **caches** the HTML/CSS/JS
+4. Server **generates unique URI** pointing to cached widget
+5. Host **creates iframe** pointing to that URI
+6. Browser **loads iframe** from CDN
+7. **Host injects CSS variables** into iframe document
+8. **Browser renders** the widget with injected theming
 
 **Size:** Typically 2-10KB (≈2,500 tokens for Claude)
+
+---
+
+## Widget Delivery & Rendering Pipeline
+
+**This is the complete journey from Claude's code generation to rendered widget:**
+
+### Step 1: Claude Generates Widget Code
+
+Claude creates a complete HTML/CSS/JavaScript string containing:
+- HTML structure
+- Inline CSS using `var(--...)` for all styling
+- Inline JavaScript for event handling
+
+```javascript
+// What Claude generates
+const widgetCode = `
+  <html>
+    <head>
+      <style>
+        body { color: var(--text-primary); background: var(--surface-1); }
+        button { background: var(--primary); border-radius: var(--radius); }
+      </style>
+    </head>
+    <body>
+      <h2>Calculator</h2>
+      <input type="range" id="slider" ...>
+      <script>
+        document.getElementById('slider').addEventListener('change', ...);
+      </script>
+    </body>
+  </html>
+`;
+```
+
+### Step 2: Claude Calls Tool with Widget Code
+
+```json
+{
+  "tool": "visualize:show_widget",
+  "input": {
+    "widget_code": "<html>...</html>"  // ← Entire string as parameter (~2-10KB)
+  }
+}
+```
+
+**Token cost:** ~2,500 tokens (one-time generation)
+
+### Step 3: MCP Server Caches & Returns URI
+
+```
+MCP Server receives: widget_code string
+↓
+Server action: Store in cache with unique ID (e.g., abc123def)
+↓
+Server returns: Resource URI
+  Example: /resources/widget/abc123def
+```
+
+### Step 4: Host Creates Double-Layer Iframe
+
+Host (Claude Desktop) creates this HTML structure:
+
+```html
+<!-- Outer container (visible in outer.html) -->
+<div id="mcp-app-container-...">
+  <!-- IFRAME #1: CDN boundary -->
+  <iframe 
+    title="visualize: Compound interest explorer"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    src="https://85b3a463cdd59fba7003c8dcbb6a4976.claudemcpcontent.com/mcp_apps?...">
+  </iframe>
+</div>
+```
+
+**Why double-layer?**
+1. **Outer iframe:** Isolates CDN-served content from host DOM
+2. **Inner iframe:** (created by CDN) Adds additional sandbox restrictions
+
+### Step 5: CDN Serves Cached Widget
+
+```
+Browser requests: https://85b3a463cdd59fba7003c8dcbb6a4976.claudemcpcontent.com/mcp_apps?...
+↓
+CDN retrieves: Cached widget HTML/CSS/JS from Step 3
+↓
+CDN returns: Raw HTML to outer iframe
+↓
+Outer iframe renders: Which contains inner iframe with widget
+```
+
+### Step 6: Host Injects Theming into Iframe
+
+**CRITICAL STEP: This is where theming happens**
+
+Host injects CSS variables into the iframe document:
+
+```javascript
+// Host runtime
+const cssVariables = {
+  '--text-primary': userThemeIsDark ? '#FFFFFF' : '#000000',
+  '--surface-1': userThemeIsDark ? '#1A1A1A' : '#FFFFFF',
+  '--primary': userThemeIsDark ? '#6699FF' : '#0066FF',
+  '--radius': '8px',
+  '--font-anthropic-sans': '"anthropic-sans", ui-sans-serif, ...',
+  '--font-anthropic-serif': '"anthropic-serif", ui-serif, ...'
+};
+
+// Host injects into iframe
+iframeDocument.documentElement.style.setProperty('--text-primary', cssVariables['--text-primary']);
+iframeDocument.documentElement.style.setProperty('--surface-1', cssVariables['--surface-1']);
+// ... etc for all variables
+
+// Also injects @font-face rules via CDN
+const fontFace = `
+  @font-face {
+    font-family: "anthropic-sans";
+    src: url("https://assets.claude.ai/Fonts/AnthropicSans-Regular.otf");
+  }
+  @font-face {
+    font-family: "anthropic-serif";
+    src: url("https://assets.claude.ai/Fonts/AnthropicSerif-Text-Regular.otf");
+  }
+`;
+iframeDocument.head.innerHTML += `<style>${fontFace}</style>`;
+```
+
+### Step 7: Browser Renders Widget with Injected Theme
+
+```
+iframe.contentDocument now contains:
+  
+  <html>
+    <head>
+      <style>
+        :root {
+          --text-primary: #FFFFFF;     ← Injected by host
+          --surface-1: #1A1A1A;         ← Injected by host
+          --primary: #6699FF;           ← Injected by host
+          --radius: 8px;                ← Injected by host
+          --font-anthropic-sans: "..."; ← Injected by host
+          --font-anthropic-serif: "..."; ← Injected by host
+        }
+        @font-face { ... }             ← Injected by host
+      </style>
+    </head>
+    <body>
+      <h2>Calculator</h2>
+      <input type="range" id="slider">
+      <script>
+        // Widget JavaScript runs here, uses host-injected variables
+        document.getElementById('slider').addEventListener('change', ...);
+      </script>
+    </body>
+  </html>
+```
+
+**Widget CSS now resolves:**
+- `color: var(--text-primary)` → `#FFFFFF` (from host injection)
+- `background: var(--surface-1)` → `#1A1A1A` (from host injection)
+- `font-family: var(--font-anthropic-sans)` → Anthropic Sans from CDN (from host injection)
+
+### Step 8: User Interacts (0 Token Cost)
+
+```
+User moves slider → JavaScript event listener fires → DOM updates → Chart re-renders
+All client-side, no server calls, no tokens used
+```
+
+### Complete Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Claude Desktop (Host)                                       │
+│                                                              │
+│  Theme Detection: isDarkMode → true                         │
+│  ↓                                                           │
+│  CSS Variables Prepared:                                     │
+│    --text-primary: #FFFFFF                                  │
+│    --surface-1: #1A1A1A                                     │
+│    --primary: #6699FF                                       │
+│    --radius: 8px                                            │
+│    --font-anthropic-*: CDN URLs                             │
+│  ↓                                                           │
+│  ┌─ IFRAME #1 ──────────────────────────────────────────┐  │
+│  │  src="claudemcpcontent.com/mcp_apps?..."             │  │
+│  │  sandbox="allow-scripts allow-same-origin..."        │  │
+│  │                                                      │  │
+│  │  CDN loads cached widget HTML/CSS/JS                │  │
+│  │  ↓                                                   │  │
+│  │  Host injects CSS variables into document           │  │
+│  │  Host injects @font-face rules                      │  │
+│  │  ↓                                                   │  │
+│  │  ┌─ Browser DOM ─────────────────────────────────┐  │  │
+│  │  │  <html>                                       │  │  │
+│  │  │    <head>                                     │  │  │
+│  │  │      <style>                                  │  │  │
+│  │  │        :root {                                │  │  │
+│  │  │          --text-primary: #FFFFFF; ✓           │  │  │
+│  │  │          --surface-1: #1A1A1A; ✓              │  │  │
+│  │  │          --primary: #6699FF; ✓                │  │  │
+│  │  │          --font-anthropic-sans: "..."; ✓     │  │  │
+│  │  │        }                                       │  │  │
+│  │  │        body { color: var(--text-primary); }   │  │  │
+│  │  │        button { background: var(--primary); } │  │  │
+│  │  │      </style>                                  │  │  │
+│  │  │    </head>                                     │  │  │
+│  │  │    <body>                                      │  │  │
+│  │  │      <input type="range">                      │  │  │
+│  │  │      <script>                                  │  │  │
+│  │  │        addEventListener(...)  ← User events   │  │  │
+│  │  │      </script>                                 │  │  │
+│  │  │    </body>                                     │  │  │
+│  │  │  </html>                                       │  │  │
+│  │  └─────────────────────────────────────────────────┘  │  │
+│  │  Rendered Widget:                                    │  │
+│  │    • Themed in dark mode (colors from host)          │  │
+│  │    • Using Anthropic fonts (from host injection)     │  │
+│  │    • Responding to user interactions (JS in iframe)  │  │
+│  │    • Zero tokens spent on interactions               │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -440,7 +679,69 @@ button { background: var(--primary); border-radius: var(--radius); }
 
 **Result:** Same widget code renders perfectly in light and dark modes.
 
-### Fonts (Anthropic Design System)
+### How Claude Adds Theming (Exact Patterns)
+
+**Claude NEVER hardcodes colors in the widget.** Instead:
+
+#### Pattern 1: CSS Variables in Style Blocks
+```html
+<style>
+  body {
+    color: var(--text-primary);        /* ← Host injects value */
+    background: var(--surface-0);      /* ← Host injects value */
+  }
+  input[type="range"] {
+    accent-color: var(--text-primary); /* ← Host injects value */
+  }
+</style>
+```
+
+#### Pattern 2: Inline Styles with CSS Variables
+```html
+<div style="background: var(--surface-1); border-radius: var(--radius); padding: 12px;">
+  <div style="font-size: 12px; color: var(--text-secondary);">Label</div>
+  <div style="font-size: 20px; font-weight: 600; color: var(--text-primary);">Value</div>
+</div>
+```
+
+#### Pattern 3: JavaScript Reading CSS Variables
+```javascript
+// For Chart.js or dynamic styling
+chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    datasets: [
+      {
+        label: 'Series 1',
+        borderColor: 'var(--text-primary)',      // ← CSS var in JS config
+        backgroundColor: 'rgba(0, 0, 0, 0.1)'
+      },
+      {
+        label: 'Series 2',
+        borderColor: 'var(--text-secondary)',     // ← CSS var in JS config
+        backgroundColor: 'rgba(0, 0, 0, 0.05)'
+      }
+    ]
+  }
+});
+```
+
+#### Pattern 4: Font Family CSS Variables
+```html
+<style>
+  @font-face {
+    font-family: anthropic-sans;
+    src: url(https://assets.claude.ai/fonts/claude-sans-regular.woff2);
+  }
+  body {
+    font-family: anthropic-serif, serif;        /* Named font */
+    /* OR */
+    font-family: var(--font-anthropic-sans);    /* CSS variable */
+  }
+</style>
+```
+
+**Result:** Same widget code works in light mode, dark mode, or any theme the host provides. ✅
 
 The host provides two typefaces via CDN:
 
