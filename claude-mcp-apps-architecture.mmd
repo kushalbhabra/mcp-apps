@@ -1,0 +1,32 @@
+graph TD
+    User["👤 User"] -->|"Asks Claude to<br/>create interactive<br/>visualization"| Claude["🤖 Claude<br/>(Conversation)"]
+    
+    Claude -->|"Analyzes request<br/>Generates HTML/CSS/JS<br/>Calls visualize tool"| MCPClient["MCP Client<br/>(Claude-side)"]
+    
+    MCPClient -->|"Tool: visualize:show_widget<br/>Param: widget_code<br/>(HTML string)"| MCPServer["MCP Server<br/>(Imagine Visual<br/>Creation Suite)"]
+    
+    MCPServer -->|"Register resource URI<br/>Host caches widget_code"| Host["🎨 Host UI<br/>(Claude Chat)"]
+    
+    Host -->|"Parse HTML<br/>Inject CSS vars<br/>Render DOM<br/>Attach event handlers"| Browser["🌐 Browser DOM"]
+    
+    Browser -->|"Display interactive<br/>widget to user"| User
+    
+    User -->|"Interact:<br/>Sliders, buttons,<br/>form inputs"| Browser
+    
+    Browser -->|"JavaScript event handlers<br/>run client-side<br/>DOM updates<br/>Chart re-renders<br/>ZERO API calls"| Browser
+    
+    Browser -->|"Display results<br/>Real-time calculations"| User
+    
+    subgraph "Token Cost Analysis"
+        A["Initial: ~2,500 tokens<br/>Widget generation & delivery"]
+        B["Per interaction: 0 tokens<br/>Client-side JavaScript"]
+        C["Update: ~3,200 tokens<br/>Regenerate full widget"]
+    end
+    
+    style Claude fill:#f9f,stroke:#333,stroke-width:2px
+    style MCPServer fill:#bbf,stroke:#333,stroke-width:2px
+    style Host fill:#bfb,stroke:#333,stroke-width:2px
+    style Browser fill:#fbb,stroke:#333,stroke-width:2px
+    style A fill:#eee
+    style B fill:#eee
+    style C fill:#eee

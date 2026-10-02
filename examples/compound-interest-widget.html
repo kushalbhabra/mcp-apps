@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compound Interest Calculator</title>
+    <style>
+        @font-face {
+            font-family: anthropic-sans;
+            src: url(https://assets.claude.ai/fonts/claude-sans-regular.woff2) format("woff2");
+            font-weight: 400;
+            font-style: normal
+        }
+        @font-face {
+            font-family: anthropic-serif;
+            src: url(https://assets.claude.ai/fonts/claude-serif-regular.woff2) format("woff2");
+            font-weight: 400;
+            font-style: normal
+        }
+        body {
+            font-family: anthropic-serif, serif;
+            color: var(--text-primary);
+            background: var(--surface-0);
+            margin: 0;
+            padding: 0;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--text-primary);
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+        }
+    </style>
+</head>
+<body>
+    <h2 class="sr-only">Interactive chart comparing compound interest growth with simple interest over time, with sliders for starting amount, rate, and years.</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px 24px; margin: 0 0 1rem;">
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                <span>Starting amount</span>
+                <span id="p-out" style="color: var(--text-primary); font-weight: 500;">$1,000</span>
+            </div>
+            <input type="range" id="p" min="500" max="10000" step="500" value="1000" style="width: 100%;" />
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                <span>Annual rate</span>
+                <span id="r-out" style="color: var(--text-primary); font-weight: 500;">7%</span>
+            </div>
+            <input type="range" id="r" min="1" max="15" step="1" value="7" style="width: 100%;" />
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                <span>Years</span>
+                <span id="y-out" style="color: var(--text-primary); font-weight: 500;">30</span>
+            </div>
+            <input type="range" id="y" min="1" max="50" step="1" value="30" style="width: 100%;" />
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 1.25rem;">
+        <div style="background: var(--surface-1); border-radius: var(--radius); padding: 12px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Compound Interest</div>
+            <div id="compound" style="font-size: 20px; font-weight: 600; color: var(--text-primary);">$7,612</div>
+        </div>
+        <div style="background: var(--surface-1); border-radius: var(--radius); padding: 12px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Simple Interest</div>
+            <div id="simple" style="font-size: 20px; font-weight: 600; color: var(--text-primary);">$3,100</div>
+        </div>
+    </div>
+
+    <div style="height: 300px; margin-bottom: 1rem;">
+        <canvas id="chart"></canvas>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+        const pInput = document.getElementById('p');
+        const rInput = document.getElementById('r');
+        const yInput = document.getElementById('y');
+
+        let chart = null;
+
+        function update() {
+            const p = parseFloat(pInput.value);
+            const r = parseFloat(rInput.value) / 100;
+            const y = parseFloat(yInput.value);
+
+            // Update labels
+            document.getElementById('p-out').textContent = '$' + p.toLocaleString();
+            document.getElementById('r-out').textContent = r * 100 + '%';
+            document.getElementById('y-out').textContent = y;
+
+            // Calculate final balances
+            const compound = p * Math.pow(1 + r, y);
+            const simple = p + (p * r * y);
+
+            document.getElementById('compound').textContent = '$' + Math.round(compound).toLocaleString();
+            document.getElementById('simple').textContent = '$' + Math.round(simple).toLocaleString();
+
+            // Generate data for chart
+            const years = Array.from({length: y + 1}, (_, i) => i);
+            const compoundData = years.map(year => p * Math.pow(1 + r, year));
+            const simpleData = years.map(year => p + (p * r * year));
+
+            // Update or create chart
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) {
+                chart.data.labels = years;
+                chart.data.datasets[0].data = compoundData;
+                chart.data.datasets[1].data = simpleData;
+                chart.update();
+            } else {
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: years,
+                        datasets: [
+                            {
+                                label: 'Compound Interest',
+                                data: compoundData,
+                                borderColor: 'var(--text-primary)',
+                                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Simple Interest',
+                                data: simpleData,
+                                borderColor: 'var(--text-secondary)',
+                                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    color: 'var(--text-primary)',
+                                    font: {family: 'anthropic-sans, sans-serif'}
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {color: 'var(--text-secondary)'},
+                                grid: {color: 'var(--surface-1)'}
+                            },
+                            x: {
+                                ticks: {color: 'var(--text-secondary)'},
+                                grid: {color: 'var(--surface-1)'}
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        pInput.addEventListener('change', update);
+        rInput.addEventListener('change', update);
+        yInput.addEventListener('change', update);
+
+        // Initial render
+        update();
+    </script>
+</body>
+</html>
