@@ -1,0 +1,89 @@
+{
+    "prompt": "show me how compound interest works",
+    "timezone": "Asia/Calcutta",
+    "locale": "en-US",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "thinking_mode": "auto",
+    "tools": [
+        {
+            "name": "read_me",
+            "description": "Returns required context for show_widget (CSS variables, colors, typography, layout rules, examples). Call before your first show_widget call. Call again later if you need a different module. Do NOT mention or narrate this call to the user — it is an internal setup step. Call it silently and proceed directly to the visualization in your response.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "modules": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "diagram",
+                                "mockup",
+                                "interactive",
+                                "data_viz",
+                                "art",
+                                "chart",
+                                "elicitation"
+                            ]
+                        },
+                        "description": "Which module(s) to load. Pick all that fit."
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "mobile",
+                            "desktop",
+                            "unknown"
+                        ],
+                        "description": "The client platform the widget will render on. Pass 'mobile' when your system prompt indicates a mobile client (narrow ~380px viewport) so SVG viewBox and layout guidance are sized accordingly; otherwise pass 'desktop'. Defaults to 'unknown' (desktop sizing)."
+                    }
+                }
+            },
+            "integration_name": "visualize",
+            "mcp_server_uuid": "6f616b42-0ed8-571e-823f-ee4aca6b7ce9",
+            "mcp_server_url": "https://sandbox.claudemcpcontent.com/imagine_mcp",
+            "needs_approval": false,
+            "backend_execution": true,
+            "read_only_hint": true,
+            "is_mcp_app": false
+        },
+        {
+            "name": "show_widget",
+            "description": "Show visual content — SVG graphics, diagrams, charts, or interactive HTML widgets — that renders inline alongside your text response. Use for flowcharts, architecture diagrams, dashboards, forms, calculators, data tables, games, illustrations, or any visual content. The code is auto-detected: starts with <svg = SVG mode, otherwise HTML mode. A global sendPrompt(text) function is available — it sends a message to chat as if the user typed it. IMPORTANT: Call read_me before your first show_widget call. Do NOT narrate or mention the read_me call to the user — call it silently, then respond as if you went straight to building the visualization.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "loading_messages": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "maxItems": 4,
+                        "description": "1–4 loading messages shown to the user while the visual renders"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Short snake_case identifier for this visual"
+                    },
+                    "widget_code": {
+                        "type": "string",
+                        "description": "SVG or HTML code to render. For SVG: raw SVG code starting with <svg> tag. For HTML: raw HTML content, do NOT include DOCTYPE, <html>, <head>, or <body> tags."
+                    }
+                },
+                "required": [
+                    "loading_messages",
+                    "title",
+                    "widget_code"
+                ]
+            },
+            "integration_name": "visualize",
+            "mcp_server_uuid": "6f616b42-0ed8-571e-823f-ee4aca6b7ce9",
+            "mcp_server_url": "https://sandbox.claudemcpcontent.com/imagine_mcp",
+            "needs_approval": false,
+            "backend_execution": true,
+            "read_only_hint": true,
+            "is_mcp_app": true
+        }
+    ]
+}

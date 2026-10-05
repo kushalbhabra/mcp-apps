@@ -1,0 +1,97 @@
+{
+    "uuid": "f58d5cec-acd1-4821-8c59-3ed701b35d9a",
+    "name": "How compound interest works",
+    "summary": "",
+    "model": "claude-sonnet-5-5",
+    "created_at": "2026-10-02T05:46:28.463828Z",
+    "updated_at": "2026-10-02T06:26:03.501907Z",
+    "settings": {
+        "enabled_web_search": true,
+        "enabled_mcp_tools": {
+            "local:playwright:browser_install": true,
+            "local:playwright:browser_snapshot-97689e0c58bb6ce8b46cac5f6d4357f9": true,
+            "local:microsoft.docs.mcp:microsoft_docs_search-d7e29507f93234948ed2e7ebea1d31a7": true
+        },
+        "enabled_monkeys_in_a_barrel": true,
+        "tool_search_mode": "auto",
+        "thinking_mode": "auto",
+        "effort_level": "medium",
+        "preview_feature_uses_artifacts": true,
+        "enabled_artifacts_attachments": true,
+        "enabled_turmeric": true
+    },
+    "is_starred": false,
+    "is_archived": false,
+    "is_temporary": false,
+    "workspace_upgraded": false,
+    "platform": "CLAUDE_AI",
+    "is_wiggle_enabled": true,
+    "effective_thinking_mode": "auto",
+    "current_leaf_message_uuid": "01a0fb4a-158d-74a8-bee5-4d5bce127d5c",
+    "chat_messages": [
+        {
+            "uuid": "01a0fb26-5003-7409-a380-a0da4c62a6ca",
+            "text": "",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "show me how compound interest works",
+                    "citations": []
+                }
+            ],
+            "sender": "human",
+            "index": 0
+        },
+        {
+            "uuid": "01a0fb26-5003-772f-8390-ff343570ddb7",
+            "text": "",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "toolu_01UvN1utNAvwy6QSbB2sJ1fE",
+                    "name": "visualize:read_me",
+                    "input": {
+                        "modules": [
+                            "interactive",
+                            "chart"
+                        ],
+                        "platform": "unknown"
+                    },
+                    "message": "Read me",
+                    "integration_name": "visualize",
+                    "is_mcp_app": false
+                },
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_01UvN1utNAvwy6QSbB2sJ1fE",
+                    "name": "visualize:read_me",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "# Imagine — Visual Creation Suite\n\n## Modules\nCall read_me again with the modules parameter to load detailed guidance for:\n- `diagram` — SVG flowcharts, structural diagrams\n- `interactive` — interactive explainers with controls\n- `chart` — charts, data analysis, geographic maps\n- Pick the closest fit."
+                        }
+                    ],
+                    "is_error": false
+                },
+                {
+                    "type": "tool_use",
+                    "id": "toolu_01S7RLrrGdjfYciDiZMHuFep",
+                    "name": "visualize:show_widget",
+                    "input": {
+                        "title": "compound_interest_explorer",
+                        "loading_messages": [
+                            "Planting the money tree",
+                            "Letting interest earn interest"
+                        ],
+                        "widget_code": "<h2 class=\"sr-only\">Interactive chart comparing compound interest growth</h2>\n<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px 24px; margin: 0 0 1.25rem;\">\n  <div>\n    <div style=\"display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);\"><span>Starting amount</span><span id=\"p-out\" style=\"color: var(--text-primary); font-weight: 500;\">$1,000</span></div>\n    <input type=\"range\" id=\"p\" min=\"500\" max=\"10000\" step=\"500\" value=\"1000\" style=\"width: 100%;\" />\n  </div>\n  <div>\n    <div style=\"display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);\"><span>Annual rate</span><span id=\"r-out\" style=\"color: var(--text-primary); font-weight: 500;\">7%</span></div>\n    <input type=\"range\" id=\"r\" min=\"1\" max=\"15\" step=\"1\" value=\"7\" style=\"width: 100%;\" />\n  </div>\n</div>"
+                    },
+                    "message": "Show widget",
+                    "integration_name": "visualize",
+                    "is_mcp_app": true
+                }
+            ],
+            "sender": "assistant",
+            "index": 1
+        }
+    ]
+}

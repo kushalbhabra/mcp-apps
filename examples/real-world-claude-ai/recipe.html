@@ -1,0 +1,173 @@
+{
+    "uuid": "53213bd5-295f-4eae-b972-bb75bcaaff8f",
+    "name": "Indian pizza recipe",
+    "summary": "",
+    "model": "claude-sonnet-5-5",
+    "created_at": "2026-10-02T07:40:54.942575Z",
+    "updated_at": "2026-10-02T07:41:09.174313Z",
+    "tool_use_example": {
+        "name": "recipe_display_v0",
+        "input": {
+            "title": "Indian-Style Paneer Tikka Pizza",
+            "description": "A desi twist on pizza with spiced paneer, onions, capsicum and a tangy tomato-masala sauce on a crisp, chewy base.",
+            "base_servings": 4,
+            "ingredients": [
+                {
+                    "id": "0001",
+                    "name": "all-purpose flour (maida)",
+                    "amount": 300,
+                    "unit": "g",
+                    "conversions": {
+                        "metric": {"amount": 300, "unit": "g"},
+                        "us": {"amount": 10.6, "unit": "oz"}
+                    }
+                },
+                {
+                    "id": "0002",
+                    "name": "instant dry yeast",
+                    "amount": 1.5,
+                    "unit": "tsp",
+                    "conversions": {
+                        "metric": {"amount": 1.5, "unit": "tsp"},
+                        "us": {"amount": 1.5, "unit": "tsp"}
+                    }
+                },
+                {
+                    "id": "0003",
+                    "name": "sugar",
+                    "amount": 1,
+                    "unit": "tsp"
+                },
+                {
+                    "id": "0004",
+                    "name": "salt",
+                    "amount": 1,
+                    "unit": "tsp"
+                },
+                {
+                    "id": "0005",
+                    "name": "warm water",
+                    "amount": 180,
+                    "unit": "ml",
+                    "conversions": {
+                        "metric": {"amount": 180, "unit": "ml"},
+                        "us": {"amount": 6, "unit": "fl oz"}
+                    }
+                },
+                {
+                    "id": "0006",
+                    "name": "olive oil or cooking oil",
+                    "amount": 2,
+                    "unit": "tbsp",
+                    "conversions": {
+                        "metric": {"amount": 30, "unit": "ml"},
+                        "us": {"amount": 1, "unit": "fl oz"}
+                    }
+                },
+                {
+                    "id": "0007",
+                    "name": "tomato puree",
+                    "amount": 150,
+                    "unit": "ml"
+                },
+                {
+                    "id": "0008",
+                    "name": "paneer, cubed",
+                    "amount": 150,
+                    "unit": "g"
+                },
+                {
+                    "id": "0009",
+                    "name": "thick curd (yogurt)",
+                    "amount": 2,
+                    "unit": "tbsp"
+                },
+                {
+                    "id": "0010",
+                    "name": "tandoori masala",
+                    "amount": 1,
+                    "unit": "tsp"
+                }
+            ],
+            "steps": [
+                {
+                    "title": "Prepare dough",
+                    "content": "Mix flour, yeast, sugar, salt. Add warm water and oil. Knead until smooth.",
+                    "timer_seconds": 600
+                },
+                {
+                    "title": "First rise",
+                    "content": "Let dough rise in warm place until doubled.",
+                    "timer_seconds": 3600
+                },
+                {
+                    "title": "Marinate paneer",
+                    "content": "Coat paneer cubes with yogurt and tandoori masala. Refrigerate.",
+                    "timer_seconds": 1800
+                },
+                {
+                    "title": "Prepare sauce",
+                    "content": "Heat oil, add garlic, tomato puree, garam masala. Simmer 5 minutes.",
+                    "timer_seconds": 300
+                },
+                {
+                    "title": "Shape pizza",
+                    "content": "Punch down dough, shape into 12-inch round on parchment paper.",
+                    "timer_seconds": 300
+                },
+                {
+                    "title": "Top pizza",
+                    "content": "Spread sauce, add marinated paneer, onions, capsicum, cheese.",
+                    "timer_seconds": 300
+                },
+                {
+                    "title": "Second rise",
+                    "content": "Let rise 15-20 minutes for extra fluffy crust.",
+                    "timer_seconds": 900
+                },
+                {
+                    "title": "Bake",
+                    "content": "Bake at 220°C (425°F) for 12-15 minutes until crust is golden.",
+                    "timer_seconds": 900
+                },
+                {
+                    "title": "Cool and serve",
+                    "content": "Let cool 2 minutes. Cut into slices and serve hot.",
+                    "timer_seconds": 120
+                }
+            ],
+            "notes": "Swap paneer for tandoori chicken for a meat version. Can use store-bought pizza dough to save time. Fresh mint and cilantro as garnish add authentic flavor."
+        }
+    },
+    "structured_data_pattern": {
+        "type": "text/html;profile=mcp-app",
+        "note": "This demonstrates the 'Static + Data' pattern where widget code is a template and data is passed separately",
+        "tool_result_format": {
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Indian-Style Paneer Tikka Pizza recipe with all ingredients and step-by-step instructions"
+                },
+                {
+                    "type": "image_gallery",
+                    "images": [
+                        {"url": "https://example.com/pizza1.jpg", "alt": "Dough preparation"},
+                        {"url": "https://example.com/pizza2.jpg", "alt": "Topped pizza before baking"},
+                        {"url": "https://example.com/pizza3.jpg", "alt": "Finished golden pizza"}
+                    ]
+                }
+            ],
+            "structuredContent": "{ recipe object here for UI rendering }",
+            "_meta": {
+                "timestamp": "2026-10-02T07:41:09Z",
+                "source": "claude-recipe-generator"
+            }
+        },
+        "best_practices": [
+            "Return both text (for model context) and structured data (for UI)",
+            "Include image gallery for visual reference",
+            "Metadata in _meta field is not added to model context",
+            "structuredContent mirrors the widget input format for UI compatibility"
+        ]
+    }
+}

@@ -1,0 +1,87 @@
+{
+    "uuid": "f58d5cec-acd1-4821-8c59-3ed701b35d9a",
+    "name": "How compound interest works",
+    "summary": "",
+    "model": "claude-sonnet-5-5",
+    "created_at": "2026-10-02T05:46:28.463828Z",
+    "updated_at": "2026-10-02T05:47:01.791634Z",
+    "platform": "CLAUDE_AI",
+    "effective_thinking_mode": "auto",
+    "response_pattern": {
+        "note": "This shows the actual assistant response after calling read_me and show_widget",
+        "phases": [
+            {
+                "phase": 1,
+                "name": "Setup (Silent)",
+                "tool": "read_me",
+                "visibility": "hidden",
+                "purpose": "Load CSS variables, component examples, responsive breakpoints"
+            },
+            {
+                "phase": 2,
+                "name": "Render (Visible)",
+                "tool": "show_widget",
+                "visibility": "visible",
+                "purpose": "Display interactive widget in sandboxed iframe"
+            },
+            {
+                "phase": 3,
+                "name": "Explanation",
+                "tool": "text",
+                "visibility": "visible",
+                "purpose": "Provide context and insights about the visualization"
+            }
+        ],
+        "assistant_response": "Drag the sliders and watch the gap between the two lines. Compound interest curves upward while simple interest stays a straight line.\n\n**Simple interest** pays you only on your original amount. $1,000 at 7% earns $70 every year, no matter how long you wait.\n\n**Compound interest** pays you on your original amount plus all the interest you've already earned. Each year's balance is the previous year's balance times 1.07, so the formula is:\n\n`balance = principal × (1 + rate)^years`\n\nIn year one you earn $70. In year two you earn 7% of $1,070, which is $74.90. The extra $4.90 is interest earning interest. It looks tiny at first, but it feeds on itself, so the growth speeds up over time.\n\nTry these in the widget:\n\n- Leave the rate at 7% and slide the years from 10 to 40. The extra from compounding grows much faster than the years do.\n- Hold the years at 30 and change the rate from 5% to 10%. A few points of rate make a big difference to the final balance.\n- A handy shortcut is the rule of 72. Divide 72 by the rate to get roughly how many years it takes your money to double. At 7%, that's about 10 years.\n\nThis model compounds once a year and has no added deposits. Real accounts often compound monthly or daily, and regular contributions make the effect stronger."
+    },
+    "protocol_flow": {
+        "note": "This shows the complete JSON-RPC 2.0 message flow for MCP Apps",
+        "user_message": {
+            "type": "text",
+            "text": "show me how compound interest works"
+        },
+        "assistant_workflow": [
+            {
+                "step": 1,
+                "action": "Claude receives user message",
+                "triggers": ["read_me tool call"]
+            },
+            {
+                "step": 2,
+                "action": "read_me executes silently",
+                "returns": "CSS variables, design system rules, component patterns",
+                "narrated": false
+            },
+            {
+                "step": 3,
+                "action": "Claude processes design context",
+                "prepares": "Widget code generation"
+            },
+            {
+                "step": 4,
+                "action": "show_widget tool call",
+                "inputs": {
+                    "title": "compound_interest_explorer",
+                    "loading_messages": ["Planting the money tree", "Letting interest earn interest"],
+                    "widget_code": "[HTML code with <input range> sliders]"
+                },
+                "narrated": true
+            },
+            {
+                "step": 5,
+                "action": "Claude Desktop host receives widget_code",
+                "renders": "sandboxed iframe with CSP constraints"
+            },
+            {
+                "step": 6,
+                "action": "Widget initialized in iframe",
+                "features": ["ResizeObserver tracks height", "Event listeners on sliders", "Real-time calculations"]
+            },
+            {
+                "step": 7,
+                "action": "Claude continues with text explanation",
+                "content": "Educational context and insights about compound interest"
+            }
+        ]
+    }
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Apps Widget - Anthropic Font Configuration</title>
+  <style id="mcp-host-fonts">
+    /* Fonts injected from Claude Desktop host context */
+  </style>
+  <style>
+    :root {
+      --font-anthropic-sans: "anthropic-sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-anthropic-serif: "anthropic-serif", ui-serif, Georgia, "Times New Roman", serif;
+    }
+
+    /* CSS Variables for MCP Apps Theming (from read_me) */
+    :root {
+      /* Text Colors */
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --text-tertiary: #999999;
+      --text-disabled: #cccccc;
+
+      /* Surface Colors */
+      --surface-1: #ffffff;
+      --surface-2: #f5f5f5;
+      --surface-3: #eeeeee;
+
+      /* Semantic Colors */
+      --primary: #0066cc;
+      --success: #00aa00;
+      --warning: #ff8800;
+      --error: #cc0000;
+
+      /* Spacing Scale (8px base) */
+      --pad-xs: 4px;
+      --pad-sm: 8px;
+      --pad-md: 12px;
+      --pad-lg: 16px;
+      --pad-xl: 24px;
+
+      --gap-xs: 4px;
+      --gap-sm: 8px;
+      --gap-md: 12px;
+      --gap-lg: 16px;
+      --gap-xl: 24px;
+
+      /* Border Radius */
+      --radius: 4px;
+
+      /* Typography */
+      --font-size-sm: 12px;
+      --font-size-base: 14px;
+      --font-size-lg: 16px;
+      --font-size-xl: 18px;
+
+      --line-height-tight: 1.2;
+      --line-height-normal: 1.5;
+      --line-height-relaxed: 1.8;
+    }
+
+    /* Anthropic Font Faces */
+    @font-face {
+      font-family: "anthropic-serif";
+      src: url("https://assets.claude.ai/Fonts/AnthropicSerif-Text-Regular-Static.otf") format("opentype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "anthropic-serif";
+      src: url("https://assets.claude.ai/Fonts/AnthropicSerif-Text-RegularItalic-Static.otf") format("opentype");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "anthropic-serif";
+      src: url("https://assets.claude.ai/Fonts/AnthropicSerif-Text-Medium-Static.otf") format("opentype");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "anthropic-serif";
+      src: url("https://assets.claude.ai/Fonts/AnthropicSerif-Text-MediumItalic-Static.otf") format("opentype");
+      font-weight: 500;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    /* Widget Base Styles */
+    body {
+      margin: 0;
+      padding: var(--pad-md);
+      font-family: var(--font-anthropic-sans);
+      color: var(--text-primary);
+      background-color: var(--surface-1);
+      line-height: var(--line-height-normal);
+    }
+
+    h1 {
+      font-family: var(--font-anthropic-serif);
+      font-size: var(--font-size-xl);
+      color: var(--text-primary);
+      margin-top: 0;
+    }
+
+    /* Accessibility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Component Styles */
+    .widget-card {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: var(--pad-lg);
+      margin-bottom: var(--gap-md);
+    }
+
+    .widget-input {
+      width: 100%;
+      padding: var(--pad-sm);
+      border: 1px solid var(--surface-3);
+      border-radius: var(--radius);
+      font-family: inherit;
+      color: var(--text-primary);
+    }
+
+    .widget-button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: var(--pad-md) var(--pad-lg);
+      border-radius: var(--radius);
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .widget-button:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <h2 class="sr-only">MCP Apps Widget Font Configuration</h2>
+  
+  <h1>Widget Configuration Test</h1>
+  
+  <div class="widget-card">
+    <p>This HTML file demonstrates the Anthropic font stack and CSS variable system used by MCP Apps.</p>
+    <p>Key configuration:</p>
+    <ul>
+      <li>Font family: anthropic-serif (headers), anthropic-sans (body)</li>
+      <li>CSS variables for colors, spacing, typography</li>
+      <li>Accessibility guidelines (sr-only class for screen readers)</li>
+      <li>Responsive layout using CSS Grid and Flexbox</li>
+      <li>No hardcoded colors (all via CSS variables for theme compatibility)</li>
+    </ul>
+  </div>
+
+  <div class="widget-card">
+    <h3>Interactive Example</h3>
+    <label for="test-input">Test Input:</label>
+    <input 
+      id="test-input" 
+      type="text" 
+      class="widget-input" 
+      placeholder="Type something..."
+    />
+    <button class="widget-button" onclick="alert('Button clicked!')">
+      Test Button
+    </button>
+  </div>
+
+  <script>
+    // Example: Widget initialization pattern
+    console.log("MCP Apps widget loaded");
+    console.log("CSS variables available:", {
+      primary: getComputedStyle(document.documentElement).getPropertyValue('--primary'),
+      textPrimary: getComputedStyle(document.documentElement).getPropertyValue('--text-primary')
+    });
+  </script>
+</body>
+</html>

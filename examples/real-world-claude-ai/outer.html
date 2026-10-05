@@ -1,0 +1,41 @@
+<div id="mcp-app-container-toolu_01S7RLrrGdjfYciDiZMHuFep" class="w-full" style="view-transition-class: mcp-app-content;">
+  <div class="h-full w-full">
+    <iframe 
+      title="visualize: Compound interest explorer" 
+      sandbox="allow-scripts allow-same-origin allow-forms" 
+      allow="fullscreen *; clipboard-write *" 
+      src="https://85b3a463cdd59fba7003c8dcbb6a4976.claudemcpcontent.com/mcp_apps?stable-origin=true&amp;connect-src=https%3A%2F%2Fesm.sh+https%3A%2F%2Fcdnjs.cloudflare.com+https%3A%2F%2Fcdn.jsdelivr.net+https%3A%2F%2Funpkg.com&amp;resource-src=https%3A%2F%2Fesm.sh+https%3A%2F%2Fcdnjs.cloudflare.com+https%3A%2F%2Fcdn.jsdelivr.net+https%3A%2F%2Funpkg.com+https%3A%2F%2Ffonts.googleapis.com+https%3A%2F%2Ffonts.gstatic.com+https%3A%2F%2Fassets.claude.ai" 
+      style="width: 100%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background-color: transparent; height: 509px;">
+    </iframe>
+  </div>
+</div>
+
+<!-- 
+  IMPORTANT: This demonstrates the real-world iframe sandbox configuration used by Claude Desktop:
+  
+  1. SANDBOX attributes (restrictive):
+     - allow-scripts: Required for interactivity
+     - allow-same-origin: Required for sandbox iframe resource access
+     - allow-forms: Required for form elements
+     - Blocks: top-level navigation, popups, plugins, etc.
+  
+  2. ALLOW attribute (permissions):
+     - fullscreen: MCP Apps support fullscreen requests
+     - clipboard-write: Allow copying to clipboard
+  
+  3. RESOURCE DOMAINS (CSS, fonts, images):
+     - https://assets.claude.ai (Anthropic fonts)
+     - https://fonts.googleapis.com (Google Fonts)
+     - https://fonts.gstatic.com (Google Fonts CDN)
+  
+  4. CONNECT DOMAINS (JavaScript fetch/XMLHttpRequest):
+     - https://esm.sh (ES modules)
+     - https://cdnjs.cloudflare.com (CDN)
+     - https://cdn.jsdelivr.net (Library CDN)
+     - https://unpkg.com (npm packages)
+  
+  5. HEIGHT NEGOTIATION:
+     - Initial height 509px is calculated from widget ResizeObserver
+     - Widget uses ResizeObserver to measure content and emit size-changed notification
+     - Claude Desktop host resizes iframe based on widget dimensions
+-->
