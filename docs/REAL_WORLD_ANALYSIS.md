@@ -85,9 +85,11 @@ Claude message → show_widget tool call (render)
 
 ### 3. `outer.html` - Rendered Output
 
-**What it shows**: The actual iframe container rendered in Claude Desktop.
+**What it shows**: The outer iframe container rendered in Claude Desktop.
 
-**Structure**:
+**Important**: This is just the OUTER iframe. Claude Desktop's actual response architecture is **double-iframe**:
+
+**Outer iframe** (what we see in outer.html):
 ```html
 <iframe 
   title="visualize: Compound interest explorer"
@@ -96,6 +98,21 @@ Claude message → show_widget tool call (render)
   src="https://85b3a463cdd59fba7003c8dcbb6a4976.claudemcpcontent.com/mcp_apps?..."
   style="width: 100%; height: 509px;">
 </iframe>
+```
+
+**Server response** (served at the `src` URL):
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- CSP headers set via HTTP (not meta tags) -->
+    <!-- CSS variables, fonts, theming -->
+  </head>
+  <body>
+    <!-- Inner iframe with srcdoc for widget sandboxing -->
+    <iframe srcdoc="<sanitized widget HTML here>"></iframe>
+  </body>
+</html>
 ```
 
 **Observations**:

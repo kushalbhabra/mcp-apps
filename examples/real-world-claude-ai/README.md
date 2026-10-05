@@ -63,7 +63,21 @@ This directory contains actual Claude.ai conversation exports showing MCP Apps i
 - Accessibility patterns (sr-only class)
 - Widget component base styles
 - Interactive example with proper styling
+## Architecture: Claude's Double-Iframe Pattern
 
+While the outer.html file only shows the first-layer iframe, Claude Desktop's actual implementation uses **double-iframe layering**:
+
+```
+Claude Desktop
+└─ Outer iframe: src="https://user-origin.claudemcpcontent.com/mcp_apps?..."
+   └─ Server response (HTTP with CSP headers)
+      └─ Inner iframe: srcdoc="<widget HTML>"
+         └─ Widget execution (isolated, constrained)
+```
+
+**This is identical to the Contoso enterprise pattern** (single domain, no per-user subdomains needed).
+
+---
 ## Patterns Demonstrated
 
 ### Pattern 1: Two-Phase Tool Execution
@@ -75,14 +89,36 @@ Phase 2: show_widget (visible)
 └─ Render widget in sandboxed iframe with user interaction
 ```
 
-### Pattern 2: Sandbox Security Model
-```javascript
-sandbox="allow-scripts allow-same-origin allow-forms"
-allow="fullscreen *; clipboard-write *"
+### Pattern 2: Double-Iframe Sandbox Architecture
+
+**Layer 1 - Outer iframe** (Origin Isolation + CSP Headers):
+```html
+<iframe 
+  src="https://user-origin.claudemcpcontent.com/mcp_apps?connect-src=..."
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  allow="fullscreen *; clipboard-write *"
+/>
 ```
-- Restrictive by default (blocks top-level navigation, popups)
-- Permits specific capabilities (scripts, forms, fullscreen)
-- Resource/connect domains white-listed
+- Per-user stable origin (e.g., `abc123.claudemcpcontent.com`)
+- Query params configure CSP headers at server
+- Resource/connect domains white-listed in HTTP headers
+
+**Layer 2 - Inner iframe** (Widget Sandboxing via srcdoc):
+```html
+<!-- Server response at claudemcpcontent.com/mcp_apps renders: -->
+<iframe srcdoc="<sanitized widget HTML with CSS variables>"></iframe>
+```
+- srcdoc prevents external URL loading (additional XSS protection)
+- Same origin as outer iframe (enables localStorage access if needed)
+- CSP constraints prevent exfiltration to unapproved domains
+- Widget JavaScript executes in isolated context
+
+**Security Model**:
+- ✅ Outer iframe blocks top-level navigation, popups, plugins
+- ✅ Permits specific capabilities (scripts, forms, fullscreen)
+- ✅ HTTP CSP headers enforce CDN allowlist (esm.sh, jsdelivr, etc.)
+- ✅ Inner iframe srcdoc prevents inline script XSS
+- ✅ Per-user origin prevents cross-user data access
 
 ### Pattern 3: Responsive Height Negotiation
 - Widget measures content with ResizeObserver
