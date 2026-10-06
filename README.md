@@ -55,6 +55,7 @@ Claude generates widget code → tool renders it → you interact with it.
 | **[MODEL_INSTRUCTIONS_SUMMARY.md](MODEL_INSTRUCTIONS_SUMMARY.md)** | ⭐ All HTML generation instructions for models |
 | **[README_COMPLETE.md](README_COMPLETE.md)** | Complete technical reference |
 | **[MCP_APPS_SDK_v2.md](MCP_APPS_SDK_v2.md)** | SDK patterns & implementation guide |
+| **[docs/CLAUDE_SERVICES.md](docs/CLAUDE_SERVICES.md)** | **Claude's public MCP services** (Imagine, endpoints, config) |
 | **[docs/EXAMPLES.md](docs/EXAMPLES.md)** | Real-world widget examples (5 patterns) |
 | **[docs/CLAUDE_PROMPTING.md](docs/CLAUDE_PROMPTING.md)** | How to ask Claude for good widgets |
 | **[docs/ADVANCED_PATTERNS.md](docs/ADVANCED_PATTERNS.md)** | State sync, async loading, workflows, etc. |

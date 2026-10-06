@@ -201,3 +201,29 @@ These exports validate that the MCP Apps specification is **production-ready** a
 - Multiple widget patterns (generative, data-driven, interactive)
 
 The implementation demonstrates 100% compliance with SEP-1865 across all major components.
+
+---
+
+## Related: Claude's Public MCP Services
+
+These examples use the same architecture as Claude's public MCP services. If you want to use pre-built visual content generation, check out:
+
+### **Imagine — Visual Creation Suite**
+
+**Endpoint**: `https://sandbox.claudemcpcontent.com/imagine_mcp`
+
+**Modules**: diagram, interactive, chart, mockup, data_viz, art, elicitation
+
+**Usage**: Add to `~/.claude_desktop_config.json` to enable Claude to generate interactive visualizations, diagrams, and charts.
+
+See [docs/CLAUDE_SERVICES.md](../../docs/CLAUDE_SERVICES.md) for complete configuration and examples.
+
+---
+
+## Contributing Your Own Exports
+
+If you have Claude.ai conversation exports showing MCP Apps in action, submit them to this directory to expand the real-world examples! Make sure to:
+- ✅ Remove any sensitive data (PII, credentials, API keys)
+- ✅ Name files clearly: `pattern-name.html` or `use-case-name.html`
+- ✅ Add a brief comment to this README explaining what the export demonstrates
+- ✅ Include the Claude.ai timestamp and user task
