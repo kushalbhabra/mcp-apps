@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Artifacts and Dashboards: architecture explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F5;--panel:#FFFFFF;--ink:#16182E;--mute:#5A5F7D;--line:#D5D9E6;--code:#EEF0FA;
+  --accent:#5B3FD9;--accent-soft:#E7E2FB;--teal:#0C7F73;--teal-soft:#D8F0EC;
+  --amber:#8F5600;--amber-soft:#FBEBCF;--red:#B8322F;--red-soft:#F9DEDC;--on:#fff;
+  --head:"Sora","Trebuchet MS",system-ui,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1120;--panel:#181B33;--ink:#E8EAFB;--mute:#9AA0C6;--line:#2C3055;--code:#1F2340;
+    --accent:#A595FF;--accent-soft:#2A2559;--teal:#4FD1BF;--teal-soft:#12332F;
+    --amber:#F0B35A;--amber-soft:#3A2A0E;--red:#FF8A85;--red-soft:#3D1A1A;--on:#0F1120;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1120;--panel:#181B33;--ink:#E8EAFB;--mute:#9AA0C6;--line:#2C3055;--code:#1F2340;
+  --accent:#A595FF;--accent-soft:#2A2559;--teal:#4FD1BF;--teal-soft:#12332F;
+  --amber:#F0B35A;--amber-soft:#3A2A0E;--red:#FF8A85;--red-soft:#3D1A1A;--on:#0F1120;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:10px 0;font-family:var(--mono);font-size:12.5px;line-height:1.55}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.01em;margin:0}
+h1{font-size:26px;line-height:1.15}
+h2{font-size:20px;margin-bottom:6px}
+h3{font-size:15px;margin:0 0 6px}
+p{margin:0 0 10px}
+.mute{color:var(--mute)}
+
+.top{max-width:1180px;margin:0 auto;padding:22px 18px 8px;display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between}
+.top p{margin:4px 0 0;color:var(--mute);max-width:62ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.ev{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid transparent;white-space:nowrap}
+.ev-D{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+.ev-R{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.ev-O{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.ev-I{background:transparent;color:var(--mute);border:1px dashed var(--mute)}
+
+.shell{max-width:1180px;margin:0 auto;padding:10px 18px 48px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:20px}
+.nav{position:sticky;top:12px;align-self:start;display:flex;flex-direction:column;gap:4px}
+.nav button{text-align:left;background:transparent;border:1px solid transparent;border-radius:8px;padding:9px 12px;font-weight:600;font-size:14px;color:var(--mute)}
+.nav button small{display:block;font-weight:400;font-size:12px;color:var(--mute)}
+.nav button:hover{background:var(--panel)}
+.nav button[aria-current="true"]{background:var(--panel);border-color:var(--line);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+@media(max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .nav{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .nav button{white-space:nowrap}
+  .nav button small{display:none}
+}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.card + .card{margin-top:14px}
+.row{display:grid;gap:14px}
+.row.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.row.sidebyside{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media(max-width:860px){.row.two,.row.sidebyside{grid-template-columns:minmax(0,1fr)}}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:6px 12px;font-weight:600;font-size:13.5px}
+.btn:hover:not(:disabled){border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.btn:disabled{opacity:.45;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:6px 12px;font-weight:600;font-size:13.5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:10px 0 14px}
+.toolbar label{font-size:13px;color:var(--mute);display:flex;gap:8px;align-items:center}
+input[type=text],select{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:7px 10px;min-width:0}
+input[type=text]{width:100%}
+
+/* overview layers */
+.layers{display:flex;flex-direction:column;gap:8px}
+.layer{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:center;text-align:left;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;transition:border-color .15s,background .15s,opacity .15s}
+.layer .n{font-family:var(--head);font-weight:700;color:var(--accent);font-size:18px}
+.layer b{display:block;font-family:var(--head);font-size:15px}
+.layer span{color:var(--mute);font-size:13.5px}
+.layer[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.layer.dim{opacity:.4}
+.pathrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 0}
+.node{border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:13px;background:var(--panel)}
+.arrow{color:var(--mute)}
+.detail ul{margin:6px 0 0;padding-left:18px}
+.detail li{margin:4px 0}
+
+/* lifecycle */
+.life svg{display:block;width:100%;height:auto}
+.life text{font-family:var(--body);font-size:16px;fill:var(--ink)}
+.row.liferow{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+@media(max-width:860px){.row.liferow{grid-template-columns:minmax(0,1fr)}}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps button{display:grid;grid-template-columns:26px 1fr;gap:8px;width:100%;text-align:left;background:none;border:0;padding:8px 4px;color:var(--mute);font-size:14px}
+.steps .i{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:11.5px;font-weight:600}
+.steps li.done button{color:var(--ink)}
+.steps li.cur button{color:var(--ink);font-weight:600}
+.steps li.cur .i{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.steps .note{display:none;font-weight:400;color:var(--mute);margin-top:3px;font-size:13.5px}
+.steps li.cur .note{display:block}
+
+/* tester */
+.verdict{border-radius:10px;padding:14px 16px;border:1px solid var(--line);margin-top:12px}
+.verdict.ok{background:var(--teal-soft);border-color:var(--teal)}
+.verdict.no{background:var(--red-soft);border-color:var(--red)}
+.verdict.warn{background:var(--amber-soft);border-color:var(--amber)}
+.verdict h3{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:4px 11px;font-size:13px}
+.chip:hover{border-color:var(--ink)}
+
+/* capabilities */
+.caps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px}
+.cap{text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;position:relative}
+.cap b{font-family:var(--mono);font-size:13.5px;display:block}
+.cap span{font-size:12px;color:var(--mute)}
+.cap .st{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%}
+.cap.yes .st{background:var(--teal)}
+.cap.consent .st{background:var(--accent)}
+.cap.limited .st{background:var(--amber)}
+.cap.no .st{background:var(--red)}
+.cap.no b{text-decoration:line-through;text-decoration-thickness:1px;opacity:.7}
+.cap[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.key{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--mute);margin-top:10px}
+.key i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+
+/* dashboards sim */
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 12px}
+.hop{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;background:var(--panel)}
+.hop.on{border-color:var(--teal);background:var(--teal-soft)}
+.hop.stop{border-color:var(--red);background:var(--red-soft)}
+.hop small{display:block;color:var(--mute);font-size:11.5px}
+.dash{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+.dash-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600}
+.dash-b{padding:14px}
+.kpi-btn{background:none;border:1px dashed transparent;border-radius:8px;text-align:left;padding:4px 6px;margin:-4px -6px}
+.kpi-btn:hover{border-color:var(--accent)}
+.kpi-v{font-family:var(--head);font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.rows{margin-top:12px;display:grid;gap:7px}
+.rr{display:grid;grid-template-columns:110px 1fr 54px;gap:10px;align-items:center;font-size:13.5px}
+.bar{height:10px;background:var(--code);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .35s}
+.fallback{border:1px dashed var(--mute);border-radius:8px;padding:16px;color:var(--mute);text-align:center}
+.src{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.fresh{font-size:12.5px;color:var(--mute)}
+
+/* troubleshoot */
+.q{font-family:var(--head);font-size:17px;margin-bottom:12px}
+.answers{display:flex;flex-wrap:wrap;gap:8px}
+.progress{font-size:12.5px;color:var(--mute);margin-bottom:6px}
+
+/* reference */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:12.5px;border-top:0}
+.tablewrap{overflow-x:auto}
+footer{max-width:1180px;margin:0 auto;padding:0 18px 30px;color:var(--mute);font-size:12.5px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Artifacts and Dashboards</h1>
+    <p>An interactive tour of how Claude artifacts and the Dashboards template work, from publish to live query. Companion to the architecture document. Snapshot of 2026-10-13, and Dashboards is still in beta.</p>
+  </div>
+  <div class="legend" aria-label="Evidence labels">
+    <span class="ev ev-D" title="Documented by Anthropic">Documented</span>
+    <span class="ev ev-R" title="Reported by a third party, not confirmed by Anthropic">Reported</span>
+    <span class="ev ev-O" title="Observed first-hand in a claude.ai session">Observed</span>
+    <span class="ev ev-I" title="The author's inference">Inference</span>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="nav" id="nav" aria-label="Sections"></nav>
+  <main id="main">
+
+    <!-- Overview -->
+    <section id="s-overview" hidden>
+      <div class="card">
+        <h2>The stack, layer by layer</h2>
+        <p class="mute">Select a layer, or trace a path. Everything an artifact does goes through the same five layers.</p>
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Trace a path">
+            <button data-path="none" aria-pressed="true">All layers</button>
+            <button data-path="build" aria-pressed="false">Build time</button>
+            <button data-path="view" aria-pressed="false">View time</button>
+          </div>
+        </div>
+        <div class="pathrow" id="pathrow" aria-live="polite"></div>
+      </div>
+      <div class="row sidebyside" style="margin-top:14px">
+        <div class="layers" id="layers"></div>
+        <div class="card detail" id="layerDetail" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h2>Four things to remember</h2>
+        <ul>
+          <li><b>One platform, many outputs.</b> Every artifact is a versioned, shareable page on the same hosting and sandbox. Types add editors and data contracts on top.</li>
+          <li><b>Capabilities are the only door out.</b> Data, state, identity, files and AI reach the page through viewer-granted capabilities, never direct network calls.</li>
+          <li><b>Viewer identity is the boundary for live data.</b> Live queries run as whoever is looking. Stored content is visible to everyone who can open the page.</li>
+          <li><b>Dashboards trades flexibility for auditability.</b> A tighter page sandbox and a Sources pane make every number traceable, at the cost of source control and reuse.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Lifecycle -->
+    <section id="s-life" hidden>
+      <div class="card">
+        <h2>From request to shared page</h2>
+        <p class="mute">Step through the publish flow in a claude.ai chat. Each publish becomes a version and open views update in place.</p>
+        <div class="toolbar">
+          <button class="btn" id="lPrev">Back</button>
+          <button class="btn primary" id="lNext">Next step</button>
+          <button class="btn" id="lPlay">Play</button>
+          <button class="btn" id="lReset">Reset</button>
+        </div>
+        <div class="row liferow">
+          <div class="life" id="lifeSvg"></div>
+          <ol class="steps" id="lifeSteps"></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sandbox -->
+    <section id="s-sandbox" hidden>
+      <div class="card">
+        <h2>Will the sandbox allow it?</h2>
+        <p class="mute">Artifact pages run on a sandboxed origin under a strict content security policy. Pick a preset or enter your own resource and see what happens, and why.</p>
+        <div class="toolbar">
+          <label>Page type
+            <div class="seg" role="group" aria-label="Page type" id="sbMode">
+              <button data-v="plain" aria-pressed="true">Plain artifact</button>
+              <button data-v="dash" aria-pressed="false">Dashboards template</button>
+            </div>
+          </label>
+          <label>Script hosts per
+            <select id="sbSurface">
+              <option value="chat">Observed chat environment</option>
+              <option value="docs">Claude Code docs</option>
+            </select>
+          </label>
+        </div>
+        <div class="chips" id="sbPresets" aria-label="Presets"></div>
+        <div class="toolbar" style="margin-top:14px">
+          <label>Resource
+            <select id="sbType">
+              <option value="script">Script</option>
+              <option value="stylesheet">Stylesheet</option>
+              <option value="font">Font file</option>
+              <option value="image">Image</option>
+              <option value="fetch">fetch or XHR</option>
+              <option value="download">Download</option>
+              <option value="storage">Browser storage</option>
+              <option value="link">Relative link</option>
+            </select>
+          </label>
+          <label style="flex:1;min-width:220px">URL or call
+            <input type="text" id="sbUrl" placeholder="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" spellcheck="false">
+          </label>
+          <button class="btn primary" id="sbRun">Check</button>
+        </div>
+        <div id="sbOut" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Capabilities -->
+    <section id="s-caps" hidden>
+      <div class="card">
+        <h2>Runtime capabilities by viewer</h2>
+        <p class="mute">A page declares capabilities and the viewer's session grants them. Choose who is looking and see what the page gets. The role mapping is a simplified model built from the documented rules <span class="ev ev-I">Inference</span></p>
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Viewer role" id="roleSeg"></div>
+        </div>
+        <div class="caps" id="capGrid"></div>
+        <div class="key">
+          <span><i style="background:var(--teal)"></i>Available</span>
+          <span><i style="background:var(--accent)"></i>Needs consent</span>
+          <span><i style="background:var(--amber)"></i>Limited</span>
+          <span><i style="background:var(--red)"></i>Not available (null)</span>
+        </div>
+      </div>
+      <div class="card detail" id="capDetail" aria-live="polite"></div>
+    </section>
+
+    <!-- Dashboards -->
+    <section id="s-dash" hidden>
+      <div class="card">
+        <h2>Live query versus extract</h2>
+        <p class="mute">Same dashboard, two data modes. Change who is viewing and how the data got in, then click the revenue number to open its source. Demo data, simulated in your browser.</p>
+        <div class="toolbar">
+          <label>Data mode
+            <div class="seg" role="group" aria-label="Data mode" id="dMode">
+              <button data-v="live" aria-pressed="true">Live query</button>
+              <button data-v="extract" aria-pressed="false">Extract</button>
+            </div>
+          </label>
+          <label>Viewer
+            <select id="dViewer">
+              <option value="ana">Ana, finance (all regions)</option>
+              <option value="ben">Ben, EMEA only</option>
+              <option value="guest">Guest on a public link</option>
+            </select>
+          </label>
+          <label>Connector
+            <select id="dConn">
+              <option value="connected">Connected</option>
+              <option value="missing">Not connected</option>
+              <option value="declined">Consent declined</option>
+            </select>
+          </label>
+        </div>
+        <div class="flow" id="dFlow" aria-label="Data path"></div>
+        <div class="row sidebyside">
+          <div class="dash">
+            <div class="dash-h"><span>Revenue this quarter</span><button class="btn" id="dRefresh">Refresh</button></div>
+            <div class="dash-b" id="dBody"></div>
+          </div>
+          <div>
+            <div class="card" id="dNote" aria-live="polite" style="margin:0"></div>
+            <div class="src" id="dSrc" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Anatomy of a dashboard <span class="ev ev-R">Reported</span></h2>
+        <ul>
+          <li>One HTML page, with charts drawn by d3. Every number must come from a dataset.</li>
+          <li>Each dataset is one table, up to 8 MB, either a live connection or a file extract.</li>
+          <li>The Sources pane lists each number's query, rows and freshness. A file icon marks an extract and braces mark a calculation done in the page.</li>
+          <li>Storage per dashboard showed 100 MB for the database and 1 GB for files. Files in the dashboard's own store are capped at 256 KB, page included.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Troubleshooter -->
+    <section id="s-fix" hidden>
+      <div class="card">
+        <h2>Something is not working</h2>
+        <p class="mute">Pick a symptom. For empty live sections, a short walkthrough finds the cause.</p>
+        <div class="toolbar">
+          <label>Symptom
+            <select id="fxSym">
+              <option value="live">Live sections are empty</option>
+              <option value="download">Download button does nothing</option>
+              <option value="lib">A chart or library is missing</option>
+              <option value="fonts">Fonts look wrong</option>
+              <option value="size">Publish refused for size</option>
+              <option value="utf8">Publish refused for encoding</option>
+              <option value="conflict">My edit was lost</option>
+              <option value="unavail">Artifacts are unavailable for my organization</option>
+            </select>
+          </label>
+        </div>
+        <div id="fxOut" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Reference -->
+    <section id="s-ref" hidden>
+      <div class="card">
+        <h2>Limits, controls and requirements</h2>
+        <div class="toolbar"><label style="flex:1;min-width:220px">Filter<input type="text" id="refQ" placeholder="Try: public, 16 MiB, audit, CMEK" spellcheck="false"></label><span class="mute" id="refCount"></span></div>
+        <div class="tablewrap"><table><thead><tr><th>Area</th><th>Item</th><th>Detail</th><th>Evidence</th></tr></thead><tbody id="refBody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>Output types compared</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th></th><th>Plain page</th><th>Slides</th><th>Docs</th><th>Design</th><th>Dashboards</th></tr></thead>
+          <tbody>
+            <tr><th>Starts from</th><td>Hand-written HTML or Markdown</td><td>Slides type and data files</td><td>Claude Docs connector</td><td>Design type and data files</td><td>Dashboards template</td></tr>
+            <tr><th>Content lives in</th><td>The artifact file</td><td>Type data files</td><td>The Docs service</td><td>Type data files</td><td>HTML page and datasets</td></tr>
+            <tr><th>Data connection</th><td>Optional, via capabilities</td><td>Not typical</td><td>Not typical</td><td>Not typical</td><td>Core feature</td></tr>
+            <tr><th>Export</th><td>Downloads capability</td><td>PowerPoint, PDF</td><td>Word, PDF, Markdown</td><td>PNG, PDF</td><td>BI hand-off, CSV per source</td></tr>
+            <tr><th>Availability</th><td>Pro, Max, Team, Enterprise</td><td>All plans</td><td>All plans</td><td>All plans</td><td>Beta, paid plans</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<footer>Companion to claude-artifacts-and-dashboards-architecture.md. Dashboards details come from Anthropic's help article and third-party testing and were not verified hands-on. Re-check before relying on any beta limit.</footer>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var EVN={D:"Documented",R:"Reported",O:"Observed",I:"Inference"};
+function ev(k){return '<span class="ev ev-'+k+'" title="'+EVN[k]+'">'+EVN[k]+'</span>'}
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+/* ---------- navigation ---------- */
+var TABS=[
+  ["overview","Overview","The five layers"],
+  ["life","Lifecycle","Publish to share"],
+  ["sandbox","Sandbox","What gets blocked"],
+  ["caps","Capabilities","By viewer role"],
+  ["dash","Dashboards","Live vs extract"],
+  ["fix","Troubleshoot","Find the cause"],
+  ["ref","Reference","Limits and controls"]
+];
+var current="overview";
+function show(id){
+  current=id;
+  TABS.forEach(function(t){var s=$("#s-"+t[0]);if(s)s.hidden=(t[0]!==id)});
+  $$("#nav button").forEach(function(b){b.setAttribute("aria-current",b.dataset.id===id?"true":"false")});
+  try{localStorage.setItem("explorer-tab",id)}catch(e){}
+  window.scrollTo(0,0);
+}
+(function(){
+  var nav=$("#nav");
+  nav.innerHTML=TABS.map(function(t){return '<button data-id="'+t[0]+'">'+t[1]+'<small>'+t[2]+'</small></button>'}).join("");
+  nav.addEventListener("click",function(e){var b=e.target.closest("button");if(b)show(b.dataset.id)});
+})();
+
+/* ---------- overview ---------- */
+var LAYERS=[
+  {n:1,t:"Output types",s:"Plain page, Slides, Docs, Design, Dashboards",
+   d:[["Plain page: one hand-written HTML or Markdown file, fully custom.","D"],["Slides, Docs and Design start from a type and open in their own editor.","D"],["Dashboards is a template for query-backed dashboards on connected data. It is in beta.","D"],["Only a type's data files change after the first publish. Its page stays fixed.","O"]]},
+  {n:2,t:"Artifact platform",s:"Artifact tool, versions, sharing, admin",
+   d:[["The Artifact tool publishes, reads, lists and updates artifacts, and handles comments and the database.","O"],["Each publish becomes a version. The author picks which version viewers see.","D"],["New artifacts are private. Sharing is per person, per organization, or by public link where allowed.","D"],["Owners control enablement, connector calls, public sharing, retention and audit.","D"]]},
+  {n:3,t:"Runtime capabilities",s:"The only door out of the sandbox",
+   d:[["Twelve names in contract 0.2.75: artifact, assets, comments, db, downloads, files, mcp, permissions, room, sample, self, user.","O"],["Reached with claude.use(name). It returns null when unavailable, so pages must design for absence.","O"],["Prompts are lazy. Consent arrives on the first call, not on use().","O"],["The mcp capability is what makes live data possible.","O"]]},
+  {n:4,t:"Sandbox",s:"Sandboxed origin, CSP, no backend",
+   d:[["Served from a sandboxed claudeusercontent.com origin under a strict content security policy.","D"],["Scripts only from a short CDN allowlist. Stylesheets only from Google Fonts. No external images.","D"],["No backend and no page-started downloads. Rendered size must stay under 16 MiB.","D"],["Dashboards pages reportedly allow only d3, with no storage or network at all.","R"]]},
+  {n:5,t:"Services",s:"Connectors, database, assets, sampling",
+   d:[["claude.ai makes connector calls on the page's behalf, using the viewer's own connection.","D"],["The page never sees credentials.","D"],["Shared database rows, uploaded assets and Claude sampling are brokered the same way.","O"],["Warehouses and apps sit behind a remotely hosted MCP connector.","D"]]}
+];
+var PATHS={
+  none:{layers:[1,2,3,4,5],nodes:[]},
+  build:{layers:[1,2],nodes:["You ask","Claude writes a file","Artifact tool publishes","Hosted, private, versioned"]},
+  view:{layers:[2,4,3,5],nodes:["Viewer opens link","Page in sandbox","claude.use()","claude.ai broker","Connector or database"]}
+};
+var selLayer=1,pathSel="none";
+function renderOverview(){
+  var active=PATHS[pathSel].layers;
+  $("#layers").innerHTML=LAYERS.map(function(l){
+    var dim=pathSel!=="none"&&active.indexOf(l.n)<0;
+    return '<button class="layer'+(dim?" dim":"")+'" data-n="'+l.n+'" aria-pressed="'+(l.n===selLayer)+'"><span class="n">'+l.n+'</span><span><b>'+l.t+'</b><span>'+l.s+'</span></span></button>';
+  }).join("");
+  var L=LAYERS[selLayer-1];
+  $("#layerDetail").innerHTML='<h3>'+L.t+'</h3><ul>'+L.d.map(function(x){return '<li>'+x[0]+' '+ev(x[1])+'</li>'}).join("")+'</ul>';
+  var nodes=PATHS[pathSel].nodes;
+  $("#pathrow").innerHTML=nodes.map(function(n,i){return (i?'<span class="arrow" aria-hidden="true">then</span>':'')+'<span class="node">'+n+'</span>'}).join("");
+}
+$("#layers").addEventListener("click",function(e){var b=e.target.closest(".layer");if(b){selLayer=+b.dataset.n;renderOverview()}});
+$$("[data-path]").forEach(function(b){b.addEventListener("click",function(){
+  pathSel=b.dataset.path;
+  $$("[data-path]").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+  renderOverview();
+})});
+
+/* ---------- lifecycle ---------- */
+var LANES=["Person","Claude","Container","Artifact tool","Hosting","Viewer"];
+var LIFE=[
+  [0,1,"Ask for a page","The person asks for an app, tool, deck or dashboard. Claude may also publish on its own when the output suits a page.","D"],
+  [1,2,"Write the source file","Claude writes one self-contained HTML or Markdown file in the sandbox container.","D"],
+  [1,3,"Call publish","Claude calls the Artifact tool with action publish and the file path.","O"],
+  [3,0,"Approval prompt","In a claude.ai chat the person approves each publish. Claude Code asks only in listed cases, such as plan mode or when capabilities are declared.","O"],
+  [0,3,"Approve","The person approves the publish.","O"],
+  [3,4,"Upload a version","The file becomes a new version of the artifact. It must be under 16 MiB and valid UTF-8.","D"],
+  [4,0,"Publish card","A card gives the person a private link. Nobody else can open it yet.","O"],
+  [0,4,"Share","Share with specific people, the whole organization, or a public link where an Owner allows it.","D"],
+  [5,4,"Open the link","A viewer opens the link. Org-shared pages require signing in as a member.","D"],
+  [4,5,"Serve the page","The page is served from a sandboxed origin under the content security policy.","D"],
+  [0,1,"Ask for a change","The person asks for an edit, or a commenter sends a comment to Claude.","O"],
+  [1,3,"Publish again","Claude republishes with the artifact URL, using small old and new string edits or a full file.","O"],
+  [3,4,"New version, same URL","The publish becomes the next version at the same address.","D"],
+  [4,5,"Views update in place","Anyone with the page open sees the update without a new link.","D"]
+];
+var lifeCur=0,lifeTimer=null;
+function renderLife(){
+  var X=LANES.map(function(_,i){return 52+i*107});
+  var H=70+LIFE.length*30+14;
+  var s='<svg viewBox="0 0 640 '+H+'" role="img" aria-label="Sequence of the publish flow across six participants"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+  LANES.forEach(function(l,i){
+    s+='<text x="'+X[i]+'" y="22" text-anchor="middle" style="font-weight:600">'+l+'</text>';
+    s+='<line x1="'+X[i]+'" y1="34" x2="'+X[i]+'" y2="'+(H-8)+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 4"/>';
+  });
+  for(var i=0;i<=lifeCur;i++){
+    var st=LIFE[i],y=58+i*30,a=X[st[0]],b=X[st[1]],dir=b>a?1:-1;
+    var cur=i===lifeCur;
+    s+='<line x1="'+(a+dir*3)+'" y1="'+y+'" x2="'+(b-dir*4)+'" y2="'+y+'" stroke="'+(cur?"var(--accent)":"var(--mute)")+'" stroke-width="'+(cur?2.2:1.2)+'" opacity="'+(cur?1:.5)+'" marker-end="url(#ah)"/>';
+    var mx=(a+b)/2;
+    s+='<circle cx="'+mx+'" cy="'+y+'" r="11.5" fill="'+(cur?"var(--accent)":"var(--panel)")+'" stroke="'+(cur?"var(--accent)":"var(--line)")+'"/>';
+    s+='<text x="'+mx+'" y="'+(y+5)+'" text-anchor="middle" style="font-size:13.5px;font-weight:600;fill:'+(cur?"var(--on)":"var(--ink)")+'">'+(i+1)+'</text>';
+  }
+  s+='</svg>';
+  $("#lifeSvg").innerHTML=s;
+  $("#lifeSteps").innerHTML=LIFE.map(function(st,i){
+    var cls=i===lifeCur?"cur":(i<lifeCur?"done":"");
+    return '<li class="'+cls+'"><button data-i="'+i+'"><span class="i">'+(i+1)+'</span><span>'+LANES[st[0]]+' to '+LANES[st[1]]+': '+st[2]+'<span class="note">'+st[3]+' '+ev(st[4])+'</span></span></button></li>';
+  }).join("");
+  $("#lPrev").disabled=lifeCur===0;
+  $("#lNext").disabled=lifeCur===LIFE.length-1;
+}
+function lifeStop(){if(lifeTimer){clearInterval(lifeTimer);lifeTimer=null}$("#lPlay").textContent="Play"}
+$("#lNext").addEventListener("click",function(){lifeStop();if(lifeCur<LIFE.length-1){lifeCur++;renderLife()}});
+$("#lPrev").addEventListener("click",function(){lifeStop();if(lifeCur>0){lifeCur--;renderLife()}});
+$("#lReset").addEventListener("click",function(){lifeStop();lifeCur=0;renderLife()});
+$("#lPlay").addEventListener("click",function(){
+  if(lifeTimer){lifeStop();return}
+  if(lifeCur>=LIFE.length-1)lifeCur=0;
+  $("#lPlay").textContent="Pause";renderLife();
+  lifeTimer=setInterval(function(){if(lifeCur<LIFE.length-1){lifeCur++;renderLife()}else lifeStop()},1500);
+});
+$("#lifeSteps").addEventListener("click",function(e){var b=e.target.closest("button");if(b){lifeStop();lifeCur=+b.dataset.i;renderLife()}});
+
+/* ---------- sandbox tester ---------- */
+var PRESETS=[
+  ["d3 from cdnjs","script","https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"],
+  ["React from unpkg","script","https://unpkg.com/react@18.3.1/umd/react.production.min.js"],
+  ["Chart library from an unknown CDN","script","https://charts.example-cdn.io/chart.js"],
+  ["Google Fonts stylesheet","stylesheet","https://fonts.googleapis.com/css2?family=Sora:wght@700"],
+  ["Bootstrap CSS from jsDelivr","stylesheet","https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"],
+  ["Remote image","image","https://example.com/logo.png"],
+  ["Inline data image","image","data:image/png;base64,iVBORw0KGgo="],
+  ["fetch to the Anthropic API","fetch","https://api.anthropic.com/v1/messages"],
+  ["fetch to a REST API","fetch","https://api.example.com/v1/orders"],
+  ["fetch to the page's own origin","fetch","/data.json"],
+  ["Download from a blob link","download","blob:https://claude.ai/3f1c"],
+  ["Write to localStorage","storage","localStorage.setItem('tab','2')"],
+  ["Link to another page","link","./page2.html"]
+];
+var sbMode="plain";
+var SCRIPT_CHAT=["cdnjs.cloudflare.com","cdn.jsdelivr.net","cdn.tailwindcss.com","code.jquery.com"];
+function parseHost(u){try{return new URL(u)}catch(e){return null}}
+function sbEval(type,url,mode,surface){
+  var u=url.trim();
+  var isRel=/^(\/|\.\/|\.\.\/)/.test(u);
+  var P=parseHost(u);
+  var hosts=SCRIPT_CHAT.slice();if(surface==="docs")hosts.push("unpkg.com");
+  var R=function(k,title,why,fix,e){return {k:k,title:title,why:why,fix:fix,ev:e}};
+  if(mode==="dash"){
+    if(type==="fetch")return R("no","Blocked","Dashboards pages reportedly have no network access at all. Data must come from datasets, not from the page.","Add the data as a dataset, backed by a live query or an extract.","R");
+    if(type==="storage")return R("no","Blocked","Dashboards pages reportedly allow no storage or cookies.","Keep state in memory, or in the dashboard's own store.","R");
+    if(type==="script"){
+      var isD3=P&&/d3/i.test(P.pathname)&&hosts.indexOf(P.hostname)>=0;
+      return isD3?R("ok","Allowed","d3 is the one library reported as supported in Dashboards pages.","Pin an exact version.","R"):R("no","Blocked","Reportedly nothing but d3 may be loaded, and no React or modules.","Draw with d3, or inline the code.","R");
+    }
+    if(type==="stylesheet"||type==="font"){return R("warn","Limited","Dashboards pages reportedly cannot load anything at view time, including fonts. Assets must be coded into the page.","Inline the CSS and embed fonts as data URIs.","R")}
+    if(type==="image"){return /^data:/i.test(u)?R("ok","Allowed","Inline data images need no network.","Keep the page under the 256 KB store limit.","R"):R("no","Blocked","External images are blocked and the page cannot fetch anything.","Embed as a data URI, within the 256 KB file limit.","R")}
+  }
+  if(type==="script"){
+    if(!P)return R("no","Not a valid URL","Enter a full https URL.","","I");
+    var h=P.hostname;
+    var ok=hosts.indexOf(h)>=0;
+    if(h==="cdn.jsdelivr.net"&&!/^\/npm\//.test(P.pathname))ok=false;
+    if(ok)return R("ok","Allowed","The host is on the script allowlist"+(h==="cdn.jsdelivr.net"?" (jsDelivr only under /npm/)":"")+".","Use the UMD build and pin an exact version, at least two weeks old, before the inline script that uses it.",surface==="docs"?"D":"O");
+    var extra=h==="unpkg.com"?" unpkg is listed in the Claude Code docs but failed in the observed chat environment.":"";
+    return R("no","Blocked","The script host is not on the allowlist, so the request fails silently and there is no fallback for a blocked library."+extra,"Switch to cdnjs or jsDelivr /npm/, or inline the code.",surface==="docs"?"D":"O");
+  }
+  if(type==="stylesheet"){
+    if(P&&P.hostname==="fonts.googleapis.com")return R("ok","Allowed","Google Fonts is the one external stylesheet source.","Give every font a fallback stack, and keep fonts.gstatic.com reachable.","D");
+    return R("no","Blocked","External stylesheets are blocked, even from hosts that may serve scripts. A library's hosted CSS never loads.","Inline the CSS the library needs.","D");
+  }
+  if(type==="font"){
+    if(/^data:/i.test(u))return R("ok","Allowed","A data URI font needs no network.","Embed with @font-face and add a fallback stack.","D");
+    if(P&&P.hostname==="fonts.gstatic.com")return R("ok","Allowed","Font files for Google Fonts load from fonts.gstatic.com.","Add a fallback stack.","D");
+    return R("no","Blocked","Only fonts.gstatic.com and data URIs can supply font files.","Inline as a base64 @font-face.","D");
+  }
+  if(type==="image"){
+    if(/^data:/i.test(u))return R("ok","Allowed","Inline data images are allowed. Large ones count toward the 16 MiB page limit.","Prefer SVG or CSS for diagrams to save tokens and size.","D");
+    return R("no","Blocked","The policy blocks every external image.","Embed as a data URI, or draw it as SVG.","D");
+  }
+  if(type==="fetch"){
+    if(isRel)return R("ok","Allowed","fetch and XHR may reach the page's own origin. There is no backend there, so only static content.","For live data, use the mcp or db capability instead.","D");
+    if(P&&P.hostname==="api.anthropic.com")return R("no","Blocked on a published page","The in-chat preview allows this call, but the published page's policy refuses it.","Declare the sample capability and call claude.use('sample').","O");
+    if(P&&(P.hostname==="fonts.googleapis.com"||P.hostname==="fonts.gstatic.com"))return R("ok","Allowed","Only the page's own origin and the Google Fonts hosts are reachable.","","D");
+    return R("no","Blocked","fetch, XHR and WebSocket reach only the page's own origin and Google Fonts hosts.","Take connector data through the mcp capability. claude.ai makes the call as the viewer. For data snapshots, inline the data.","D");
+  }
+  if(type==="download")return R("no","Blocked","The viewer blocks any download the page starts itself, including data: and blob: links.","Declare the downloads capability and call downloads.save(). The viewer confirms and may decline.","D");
+  if(type==="storage"){
+    if(/window\.storage/.test(u))return R("no","Undefined on a published page","window.storage exists only in the in-chat preview.","Use the db capability for shared state, or guarded localStorage for per-viewer state.","O");
+    return R("warn","Works, with caveats","localStorage, sessionStorage and IndexedDB are private to this artifact in that viewer's browser. They are never shared and can come back empty.","Wrap every read and write in try/catch and render correctly with no stored value.","O");
+  }
+  if(type==="link")return R("no","Does not resolve","Nothing is deployed beside the page, so relative links go nowhere.","Use in-page anchors and show or hide sections.","D");
+  return R("no","Unknown","","","I");
+}
+function sbRender(r,url){
+  var cls=r.k==="ok"?"ok":(r.k==="warn"?"warn":"no");
+  var mark=r.k==="ok"?"Allowed":(r.k==="warn"?"Caution":"Blocked");
+  $("#sbOut").innerHTML='<div class="verdict '+cls+'"><h3>'+esc(r.title)+' '+ev(r.ev)+'</h3><p class="mono" style="word-break:break-all;margin:0 0 8px">'+esc(url||"")+'</p><p><b>Why.</b> '+esc(r.why)+'</p>'+(r.fix?'<p style="margin:0"><b>Do this instead.</b> '+esc(r.fix)+'</p>':'')+'</div>';
+}
+function sbRun(){var t=$("#sbType").value,u=$("#sbUrl").value;if(!u.trim()){$("#sbOut").innerHTML='<div class="verdict warn"><h3>Enter a resource</h3><p style="margin:0">Type a URL or pick a preset above.</p></div>';return}sbRender(sbEval(t,u,sbMode,$("#sbSurface").value),u)}
+$("#sbPresets").innerHTML=PRESETS.map(function(p,i){return '<button class="chip" data-i="'+i+'">'+p[0]+'</button>'}).join("");
+$("#sbPresets").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;var p=PRESETS[+b.dataset.i];$("#sbType").value=p[1];$("#sbUrl").value=p[2];sbRun()});
+$("#sbRun").addEventListener("click",sbRun);
+$("#sbUrl").addEventListener("keydown",function(e){if(e.key==="Enter")sbRun()});
+$("#sbSurface").addEventListener("change",function(){if($("#sbUrl").value.trim())sbRun()});
+$$("#sbMode button").forEach(function(b){b.addEventListener("click",function(){sbMode=b.dataset.v;$$("#sbMode button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});if($("#sbUrl").value.trim())sbRun()})});
+
+/* ---------- capabilities ---------- */
+var ROLES=["Owner","Editor","Contributor","Viewer","Public visitor"];
+var CAPS=[
+ {n:"artifact",s:"Publish a new version",sn:"await artifact.publish(html)  // complete document, doctype first",
+  notes:["The page is the record: embed shared state as data, regenerate the document, publish.","Never serialize the live DOM. Publish only after a viewer acts, never on load.","A conflict means every view reloads to the winner and the losing edit is dropped. Do not retry.","Read-only viewers get not_granted or not_writer. self is the old name for this capability."],
+  by:["yes","yes","no","no","no"],why:["Can publish","Can publish (admin level)","Read-only in practice","Read-only: not_writer","Read-only"]},
+ {n:"db",s:"Shared and per-person rows",sn:"capabilities: { db:{}, user:{} }\nconst db = await claude.use('db')  // null if signed out",
+  notes:["Role ladder: view < interact < admin (Editor) < owner.","Documents have even path segment counts, collections odd. data/users/<id>/ is private even from the owner.","Never hardcode seeds. Handle an empty database. One write at a time per document.","No secrets. Shared data is untrusted."],
+  by:["yes","yes","limited","limited","no"],why:["Read and write","Read and write (admin)","Reads shared docs, writes only where a rule allows interact","Reads only","Null when signed out"]},
+ {n:"assets",s:"Uploaded files",sn:"const a = await claude.use('assets')\nawait a.upload(blob)  // 20 MiB cap",
+  notes:["Writer-only. Readers get null.","A page that declares assets is organization-internal, never public.","Serve by id at /_blob/<id>. Quota is per artifact.","SVG is capped at 2 MiB and sanitized on upload."],
+  by:["yes","yes","no","no","no"],why:["Can upload","Can upload","Reader view: null","Reader view: null","Null, and the page cannot be public"]},
+ {n:"comments",s:"Page-driven comment entry",sn:"capabilities: { comments:{ composer_only:true } }\n// or { comments:{} } for write verbs under consent",
+  notes:["composer_only grants openComposer and anchorFor with no consent prompt.","The full form adds write verbs, acting as the viewer, under consent.","Public-link visitors and email invitees get null for the full form.","The shell renders every thread. Never build your own list."],
+  by:["consent","consent","consent","consent","no"],why:["Consent for write verbs","Consent for write verbs","Consent for write verbs","Consent for write verbs","Public-link visitors get null"]},
+ {n:"downloads",s:"Save a generated file",sn:"capabilities: { downloads:true }\nawait downloads.save({ filename, data })",
+  notes:["The page cannot start a download itself. This capability is the only way.","The viewer sees a confirmation and may decline. A save is never silent or guaranteed.","Offer it on explicit viewer intent."],
+  by:["consent","consent","consent","consent","consent"],why:["Viewer confirms","Viewer confirms","Viewer confirms","Viewer confirms","Viewer confirms (account must have it enabled)"]},
+ {n:"files",s:"Claude Code project files",sn:"capabilities: { files:{ project:'chan_...' } }\nawait files.read(path, { offset, length })",
+  notes:["Reads a Claude Code project's files as the viewer.","Only project members can publish a page that declares files.","A viewer who cannot open the files gets not_found, never a prompt. Members are asked once.","Do not copy file contents into the page, assets or versions."],
+  by:["yes","limited","limited","limited","no"],why:["If a project member","Only if they can open the project","Only if they can open the project","Only if they can open the project","Null outside the organization"]},
+ {n:"mcp",s:"Call the viewer's connectors",sn:"capabilities: { mcp:{ servers:[{ server:'Snowflake', tools:['query'] }] } }\nwatchTool(server, tool, input, handler, { refetchInterval })",
+  notes:["Calls use the viewer's credentials. The page never sees tokens.","Keep the manifest minimal. It bars public sharing.","watchTool replays cache and refreshes when stale. callTool is for one-off actions.","Never guess tool arguments. Read describeTool or observe a real call.","Local MCP servers can feed the build but cannot be called by a published page."],
+  by:["consent","consent","consent","consent","no"],why:["Consent, then runs as them","Consent, then runs as them","Consent, then runs as them","Consent, then runs as them","No connector calls for unsigned viewers"]},
+ {n:"room",s:"Live events and presence",sn:"const room = await claude.use('room')\nroom.emit('move', { x: 3 })\nroom.presence({ cursor })",
+  notes:["Reaches whoever has the page open right now. Nothing persists and messages can drop.","Event topics are admin-only unless opened, for example { topics: { move: 'interact' } }.","Everything heard is untrusted, guests included."],
+  by:["yes","yes","limited","limited","limited"],why:["Emit and listen","Emit and listen on any topic","Can emit on opened topics","Can emit on opened topics","Guest access, opened topics only"]},
+ {n:"sample",s:"Ask Claude from the page",sn:"const sample = await claude.use('sample')\nconst { text } = await sample('Summarize: ...')",
+  notes:["Replaces the in-chat preview's direct API call. Memoryless, so send instructions, data and format each time.","modelTier is quick, default or complex. Name a model only if the user does.","The first call asks consent. Hide on not_granted, back off on rate_limited."],
+  by:["consent","consent","consent","consent","limited"],why:["Consent on first call","Consent on first call","Consent on first call","Consent on first call","Depends on account and link settings"]},
+ {n:"user",s:"Who is viewing",sn:"const user = await claude.use('user')\nconst id = await user.id()  // store ids only",
+  notes:["Answers who is viewing and who the shared state names. Others are absent.","isOwner, canEdit and can(name) need no setup. id, me and profiles need the declaration.","Store only ids. Resolve names at render time."],
+  by:["yes","yes","yes","yes","no"],why:["Full identity","Full identity","Full identity","Full identity","Absent (null)"]},
+ {n:"permissions",s:"Check and request consent",sn:"claude.permissions.state()  // never declared",
+  notes:["Built in. Never declare it.","Prompts are lazy. A denial is final for that page load, and the next load starts fresh.","Degrade per capability. Never loop on request."],
+  by:["yes","yes","yes","yes","yes"],why:["Always available","Always available","Always available","Always available","Always available"]}
+];
+var roleIx=0,capSel="mcp";
+function renderCaps(){
+  $("#roleSeg").innerHTML=ROLES.map(function(r,i){return '<button data-i="'+i+'" aria-pressed="'+(i===roleIx)+'">'+r+'</button>'}).join("");
+  $("#capGrid").innerHTML=CAPS.map(function(c){
+    var k=c.by[roleIx];
+    return '<button class="cap '+k+'" data-n="'+c.n+'" aria-pressed="'+(c.n===capSel)+'"><i class="st"></i><b>'+c.n+'</b><span>'+c.s+'</span></button>';
+  }).join("");
+  var c=CAPS.filter(function(x){return x.n===capSel})[0];
+  var k=c.by[roleIx];
+  var kl={yes:"Available",consent:"Needs consent",limited:"Limited",no:"Not available"}[k];
+  $("#capDetail").innerHTML='<h3><span class="mono">'+c.n+'</span> for '+ROLES[roleIx].toLowerCase()+': '+kl+'</h3><p>'+c.why[roleIx]+' '+ev("I")+'</p><pre>'+esc(c.sn)+'</pre><ul>'+c.notes.map(function(n){return '<li>'+n+'</li>'}).join("")+'</ul><p class="mute" style="margin-top:8px">Behavior of the capability itself: '+ev("O")+'</p>';
+}
+$("#roleSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(b){roleIx=+b.dataset.i;renderCaps()}});
+$("#capGrid").addEventListener("click",function(e){var b=e.target.closest(".cap");if(b){capSel=b.dataset.n;renderCaps()}});
+
+/* ---------- dashboards simulator ---------- */
+var WH=[["North America",4.2],["EMEA",3.1],["APAC",2.4],["LATAM",0.9]];
+var PERM={ana:["North America","EMEA","APAC","LATAM"],ben:["EMEA"],guest:[]};
+var dash={mode:"live",viewer:"ana",conn:"connected",t:new Date(),src:false};
+var SQL="SELECT region, SUM(amount) AS revenue\nFROM sales.orders\nWHERE order_date >= DATE_TRUNC('quarter', CURRENT_DATE)\nGROUP BY region\nORDER BY revenue DESC;";
+function tm(d){return d.toTimeString().slice(0,8)}
+function renderDash(){
+  var d=dash,live=d.mode==="live",rows=[],note="",blocked=null,hops=[];
+  var vName={ana:"Ana",ben:"Ben",guest:"the guest"}[d.viewer];
+  if(!live){
+    rows=WH.slice();
+    hops=[["Dashboard page","Reads stored files",1]];
+    note='<h3>Extract</h3><p>The numbers were stored with the dashboard when Claude took the extract. There is no query at view time and no refresh button.</p>';
+    if(d.viewer!=="ana")note+='<p><b>Governance gap.</b> '+esc(vName)+' sees every region, including rows the source would not let '+(d.viewer==="ben"?"him":"them")+' query. Anyone who can open an extract dashboard can read its files.</p>';
+    note+='<p class="mute">'+ev("R")+'</p>';
+  }else{
+    if(d.viewer==="guest"){
+      blocked="Connector calls do not run for a viewer who opens a public link without signing in.";
+      hops=[["Dashboard page","Renders the page",1],["claude.ai broker","No signed-in viewer",0]];
+      note='<h3>Live query, public link</h3><p>The page renders but its live sections stay empty. Share within the organization instead.</p><p class="mute">'+ev("D")+'</p>';
+    }else if(d.conn==="missing"){
+      blocked="The Snowflake connector is not connected for this account. Connect it under Settings, then Connectors, and reload.";
+      hops=[["Dashboard page","Asks for data",1],["claude.ai broker","No connection",0]];
+      note='<h3>Live query, no connector</h3><p>Connectors are per account, so each viewer needs their own. The page still renders, without live sections.</p><p class="mute">'+ev("D")+'</p>';
+    }else if(d.conn==="declined"){
+      blocked="Access was declined for this page load. Reload the page to see the permission ask again.";
+      hops=[["Dashboard page","Asks for data",1],["claude.ai broker","Consent declined",0]];
+      note='<h3>Live query, consent declined</h3><p>A denial lasts for the rest of that page load. Reloading brings the ask back.</p><p class="mute">'+ev("D")+'</p>';
+    }else{
+      rows=WH.filter(function(r){return PERM[d.viewer].indexOf(r[0])>=0});
+      hops=[["Dashboard page","Renders cache first",1],["claude.ai broker","Consent granted",1],["Remote connector","Viewer credentials",1],["Warehouse","Runs as "+vName.toLowerCase(),1]];
+      note='<h3>Live query</h3><p>The query ran as '+esc(vName)+', so the source applied '+(d.viewer==="ben"?"his":"her")+' permissions'+(d.viewer==="ben"?' and returned only EMEA':'')+'. Results are cached in the browser and refresh on open or on demand.</p><p class="mute">The documented mechanism, applied to Dashboards by inference. '+ev("D")+' '+ev("I")+'</p>';
+    }
+  }
+  $("#dFlow").innerHTML=hops.map(function(h,i){return (i?'<span class="arrow" aria-hidden="true">to</span>':'')+'<span class="hop '+(h[2]?"on":"stop")+'">'+h[0]+'<small>'+h[1]+'</small></span>'}).join("");
+  var total=rows.reduce(function(a,r){return a+r[1]},0),max=WH[0][1];
+  var body;
+  if(blocked){body='<div class="fallback"><b>Live section unavailable</b><br>'+esc(blocked)+'</div>'}
+  else{
+    body='<button class="kpi-btn" id="dKpi" aria-label="Open the source of this number"><div class="fresh">Total, $M. Click for source.</div><div class="kpi-v">'+total.toFixed(1)+'</div></button><div class="rows">'+rows.map(function(r){return '<div class="rr"><span>'+r[0]+'</span><div class="bar"><i style="width:'+(r[1]/max*100)+'%"></i></div><span style="text-align:right">'+r[1].toFixed(1)+'</span></div>'}).join("")+'</div><p class="fresh" style="margin:12px 0 0">'+(live?'Data fetched at '+tm(d.t)+' (your browser clock, demo)':'Extract taken 2026-10-12 by the owner')+'</p>';
+  }
+  $("#dBody").innerHTML=body;
+  $("#dNote").innerHTML=note;
+  $("#dRefresh").hidden=!live;
+  $("#dRefresh").disabled=!!blocked;
+  var src=$("#dSrc");
+  if(d.src&&!blocked){
+    src.hidden=false;
+    src.innerHTML=live?
+      '<h3>Sources pane</h3><p class="fresh">Live query, runs as '+esc(vName.toLowerCase())+'. Fetched '+tm(d.t)+'.</p><pre>'+esc(SQL)+'</pre><p class="fresh">'+rows.length+' row'+(rows.length===1?"":"s")+'. Editors can edit, test and restore the query, and download rows as CSV.</p>':
+      '<h3>Sources pane</h3><p class="fresh">File extract. Readable by everyone with access to the dashboard.</p><pre>orders_q4_extract.csv\n'+WH.length+' rows, 1 table</pre><p class="fresh">To refresh, ask Claude to take the extract again.</p>';
+  }else{src.hidden=true}
+  var kp=$("#dKpi");if(kp)kp.addEventListener("click",function(){dash.src=!dash.src;renderDash()});
+}
+$$("#dMode button").forEach(function(b){b.addEventListener("click",function(){dash.mode=b.dataset.v;dash.t=new Date();$$("#dMode button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});renderDash()})});
+$("#dViewer").addEventListener("change",function(e){dash.viewer=e.target.value;dash.t=new Date();renderDash()});
+$("#dConn").addEventListener("change",function(e){dash.conn=e.target.value;dash.t=new Date();renderDash()});
+$("#dRefresh").addEventListener("click",function(){dash.t=new Date();renderDash()});
+
+/* ---------- troubleshooter ---------- */
+var FIX={
+ download:["Download button does nothing","The page started the download itself, and the viewer blocks that, including data: and blob: links.","Rebuild with the downloads capability: declare downloads:true and call downloads.save(). The viewer confirms and may decline.","D"],
+ lib:["A chart or library is missing","The script host is not on the allowlist, or the host is blocked by network policy. A blocked library has no fallback.","Load from cdnjs or jsDelivr /npm/ with a pinned version, or inline the code. Ask your admin to allow the CDN hosts if the network blocks them.","D"],
+ fonts:["Fonts look wrong","Google Fonts is blocked on your network, so the page falls back to its font stack.","Allow fonts.googleapis.com and fonts.gstatic.com, or inline fonts as data URIs.","D"],
+ size:["Publish refused for size","The rendered page is over 16 MiB. Large embedded images are the usual cause.","Use SVG or HTML and CSS instead of raster images, or shrink them.","D"],
+ utf8:["Publish refused for encoding","The file is not valid UTF-8, or it contains the replacement character U+FFFD.","Fix the text at the line and column the error reports, then publish again.","D"],
+ conflict:["My edit was lost","Someone published a newer version first. A conflict makes every view reload to the winner and drops the losing edit.","This is expected. Reload to the winner and redo the edit. For Claude, merge onto the newer version.","O"],
+ unavail:["Artifacts are unavailable for my organization","Artifacts are off when CMEK, HIPAA or zero data retention is enabled, when the session uses an API key or a cloud-provider model, or when the policy cannot load from api.anthropic.com.","Check the organization's settings and let api.anthropic.com through any proxy. One launch report says CMEK is now supported, so verify the current status.","D"]
+};
+var LIVEQ=[
+ ["How is the viewer opening the page?",["Signed in as a member of the organization","Public link, or from outside the organization"],
+   [null,["Connector calls do not run for unsigned viewers or viewers outside the organization.","Share the artifact within the organization instead of by public link.","D"]]],
+ ["Has the viewer connected the connector the page uses?",["Yes","No"],
+   [null,["Connectors are per account. Each viewer needs their own connection to every connector the page calls.","Connect it under Settings, then Connectors, and reload. Ask Claude to add a fallback message naming the connector.","D"]]],
+ ["Did the viewer decline the permission ask for this page load?",["No","Yes"],
+   [null,["A denial lasts for the rest of that page load.","Reload the page. The permission ask comes back.","D"]]],
+ ["Is Enable artifact connectors turned on for the organization?",["Yes","No"],
+   [null,["Connector calls from artifacts have their own admin toggle, separate from Artifacts.","An Owner turns it on under Organization settings, then Capabilities.","D"]]],
+ ["Is the connector a local MCP server?",["No, it is remote","Yes, it runs on a machine"],
+   [null,["A published page cannot call a local MCP server. It can only supply data while Claude builds the page.","Use a remotely hosted connector for live queries, or accept an extract.","D"]]],
+ ["Does the page call tool names the connector actually exposes?",["Yes","No, or not sure"],
+   [null,["A mismatch leaves the affected sections empty for everyone, including the author. This can happen with gateway-style connectors.","Ask Claude to fix the tool names and publish again. Claude Code checks the names when it publishes.","D"]]]
+];
+var fx={q:0};
+function renderFix(){
+  var sym=$("#fxSym").value,out=$("#fxOut");
+  if(sym!=="live"){
+    var f=FIX[sym];
+    out.innerHTML='<div class="verdict warn"><h3>'+f[0]+' '+ev(f[3])+'</h3><p><b>Likely cause.</b> '+f[1]+'</p><p style="margin:0"><b>Fix.</b> '+f[2]+'</p></div>';
+    return;
+  }
+  if(fx.q>=LIVEQ.length){
+    out.innerHTML='<div class="verdict warn"><h3>No known cause matched</h3><p>Check the error codes the page receives. Tool failures reject with tool_error, and only retryable errors should be retried. Authorization denials should drop the data.</p><button class="btn" id="fxAgain">Start over</button></div>';
+    $("#fxAgain").addEventListener("click",function(){fx.q=0;renderFix()});
+    return;
+  }
+  if(fx.found){
+    var r=fx.found;
+    out.innerHTML='<div class="verdict no"><h3>Found it '+ev(r[2])+'</h3><p><b>Cause.</b> '+r[0]+'</p><p><b>Fix.</b> '+r[1]+'</p><button class="btn" id="fxAgain2">Start over</button></div>';
+    $("#fxAgain2").addEventListener("click",function(){fx={q:0};renderFix()});
+    return;
+  }
+  var Q=LIVEQ[fx.q];
+  out.innerHTML='<div class="progress">Question '+(fx.q+1)+' of '+LIVEQ.length+'</div><div class="q">'+Q[0]+'</div><div class="answers">'+Q[1].map(function(a,i){return '<button class="btn '+(i===0?"":"")+'" data-a="'+i+'">'+a+'</button>'}).join("")+'</div>';
+}
+$("#fxOut").addEventListener("click",function(e){
+  var b=e.target.closest("[data-a]");if(!b)return;
+  var Q=LIVEQ[fx.q],a=+b.dataset.a;
+  var map=Q[2];
+  var hit=(Q[1].length===2&&a===1&&map[1])?map[1]:null;
+  if(fx.q===0&&a===1)hit=Q[2][1];
+  if(hit){fx.found=hit}else{fx.q++}
+  renderFix();
+});
+$("#fxSym").addEventListener("change",function(){fx={q:0};renderFix()});
+
+/* ---------- reference ---------- */
+var REF=[
+ ["Size","Rendered page","16 MiB maximum","D"],
+ ["Size","Asset upload","20 MiB each. CSS or JS 16 MiB. SVG 2 MiB, sanitized on upload.","O"],
+ ["Size","Database document","256 kB serialized. Batch of up to 50 writes.","O"],
+ ["Size","Dashboard dataset","8 MB per dataset","R"],
+ ["Size","Dashboard storage","100 MB database, 1 GB files, 256 KB per file in the dashboard store","R"],
+ ["Comments","Reply text","Up to 4096 bytes. Plain text.","O"],
+ ["Comments","Auto-replies (Claude Code)","Stops after 60 sent comments per artifact in an hour","D"],
+ ["Runtime","use() timeout","Resolves null after 10 seconds with no viewer answer","O"],
+ ["Runtime","Sample cache","5-minute replay unless cache is false","O"],
+ ["Runtime","Contract version","0.2.75 observed. Moved only on a deliberate contract setting.","O"],
+ ["Sharing","Default visibility","Private to the author until shared","D"],
+ ["Sharing","Public links","Off by default on Team and Enterprise until an Owner enables External sharing","D"],
+ ["Sharing","Editors","Team and Enterprise only. A publish built on a stale copy is refused and merged.","D"],
+ ["Sharing","Connector-backed pages","Treat as organization-only. Unsigned viewers get no live calls.","D"],
+ ["Admin","Enable artifacts","Organization settings, Artifacts. On by default on Team and Enterprise.","D"],
+ ["Admin","Dashboards on Enterprise","Off by default until an Owner turns it on. Can be limited to groups.","D"],
+ ["Admin","Artifact connectors","Separate Enable artifact connectors toggle under Capabilities","D"],
+ ["Admin","Retention","Separate periods for private and shared artifacts","D"],
+ ["Admin","Audit log","claude_artifact_* events for publish, share and delete","D"],
+ ["Admin","Compliance API","List artifacts, fetch a version's content, delete an artifact","D"],
+ ["Network","Allowlist","claude.ai, *.claudeusercontent.com, optionally Google Fonts and CDN script hosts","D"],
+ ["Requirements","Plans","Pro, Max, Team, Enterprise","D"],
+ ["Requirements","Model provider","Anthropic API only. Not Bedrock, Google Cloud Agent Platform or Microsoft Foundry.","D"],
+ ["Requirements","Organization policy","CMEK, HIPAA and zero data retention must not be enabled. One report says CMEK is now supported.","D"],
+ ["Requirements","Desktop app","Version 1.13576.0 or later for Claude Code artifacts","D"],
+ ["Dashboards","Status","Beta since 2026-10-08. Pro, Max, Team, Enterprise.","D"],
+ ["Dashboards","Data sources","Redshift, BigQuery, ClickHouse, Databricks, Snowflake, and connected apps such as Salesforce","D"],
+ ["Dashboards","Live refresh","Needs a remotely hosted MCP connector","R"],
+ ["Dashboards","Export destinations","Amplitude, Grafana Cloud, Hex, Mixpanel, Omni, Perplexity Computer, PostHog, Sigma. The list is moving.","R"],
+ ["Dashboards","Source code","Not downloadable. No source-control export.","R"],
+ ["Dashboards","Published limits","No documented refresh schedule, row limits or chart limits","R"]
+];
+function renderRef(){
+  var q=$("#refQ").value.trim().toLowerCase();
+  var rows=REF.filter(function(r){return !q||(r[0]+" "+r[1]+" "+r[2]).toLowerCase().indexOf(q)>=0});
+  $("#refBody").innerHTML=rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+ev(r[3])+'</td></tr>'}).join("")||'<tr><td colspan="4" class="mute">Nothing matches. Try another word.</td></tr>';
+  $("#refCount").textContent=rows.length+" of "+REF.length;
+}
+$("#refQ").addEventListener("input",renderRef);
+
+/* ---------- boot ---------- */
+renderOverview();renderLife();renderCaps();renderDash();renderFix();renderRef();
+var start="overview";
+try{var s=localStorage.getItem("explorer-tab");if(s&&TABS.some(function(t){return t[0]===s}))start=s}catch(e){}
+show(start);
+})();
+</script>
+</body>
+</html>
